@@ -14,7 +14,7 @@ def _pong(message):
 
 def _redispatch_message_common(message, mtype):
     target, text = message.params[0], message.params[1]
-    user = get_user(message.source)
+    user = get_user(message.source) if message.source else ''
     signal(mtype).send(message, user=user, target=target, text=text)
     if target == message.client.nickname:
         signal("private-{}".format(mtype)).send(message, user=user, target=target, text=text)
