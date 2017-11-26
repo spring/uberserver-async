@@ -5,25 +5,32 @@ import logging
 import random
 import ssl
 from blinker import signal
+
 loop = asyncio.get_event_loop()
 
 connections = {}
 
 plugins = []
+
+
 def plugin_registered_handler(plugin_name):
     plugins.append(plugin_name)
 
+
 signal("plugin-registered").connect(plugin_registered_handler)
+
 
 def load_plugins(*plugins):
     for plugin in plugins:
         if plugin not in plugins:
             importlib.import_module(plugin)
 
+
 class User:
     """
     Represents a user on IRC, with their nickname, username, and hostname.
     """
+
     def __init__(self, nick, user, host):
         self.nick = nick
         self.user = user
@@ -39,11 +46,13 @@ class User:
             return self(nick, user, host)
         return self(None, None, hostmask)
 
+
 class IRCProtocolWrapper:
     """
     Wraps an IRCProtocol object to allow for automatic reconnection. Only used
     internally.
     """
+
     def __init__(self, protocol):
         self.protocol = protocol
 
@@ -57,6 +66,7 @@ class IRCProtocolWrapper:
             self.protocol = val
         else:
             setattr(self.protocol, attr, val)
+
 
 class IRCProtocol(asyncio.Protocol):
     """
@@ -123,6 +133,7 @@ class IRCProtocol(asyncio.Protocol):
             self.logger.debug("Registering function for event {}".format(event))
             signal(event).connect(f)
             return f
+
         return process
 
     def _writeln(self, line):
@@ -223,25 +234,27 @@ class IRCProtocol(asyncio.Protocol):
         s = "a{}".format("".join([random.choice("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(8)]))
         return s
 
-    ## catch-all
+        ## catch-all
 
-    # def __getattr__(self, attr):
-    #     if attr in self.__dict__:
-    #         return self.__dict__[attr]
+        # def __getattr__(self, attr):
+        #     if attr in self.__dict__:
+        #         return self.__dict__[attr]
 
-    #     def _send_command(self, *args):
-    #         argstr = " ".join(args[:-1]) + " :{}".format(args[-1])
-    #         self.writeln("{} {}".format(attr.upper(), argstr))
+        #     def _send_command(self, *args):
+        #         argstr = " ".join(args[:-1]) + " :{}".format(args[-1])
+        #         self.writeln("{} {}".format(attr.upper(), argstr))
 
-    #     _send_command.__name__ == attr
-    #     return _send_command
+        #     _send_command.__name__ == attr
+        #     return _send_command
+
 
 def get_user(hostmask):
     if "!" not in hostmask or "@" not in hostmask:
         return User(hostmask, hostmask, hostmask)
     return User.from_hostmask(hostmask)
 
-def connect(server, port=6697, use_ssl=True):
+
+def connect(server, port=8200, use_ssl=False):
     """
     Connect to an IRC server. Returns a proxy to an IRCProtocol object.
     """
@@ -253,6 +266,7 @@ def connect(server, port=6697, use_ssl=True):
     signal("netid-available").send(protocol)
     connections[protocol.netid] = protocol.wrapper
     return protocol.wrapper
+
 
 def disconnected(client_wrapper):
     """
@@ -267,20 +281,24 @@ def disconnected(client_wrapper):
         sys.exit(2)
 
     connector = loop.create_connection(IRCProtocol, **client_wrapper.server_info)
+
     def reconnected(f):
         """
         Callback function for a successful reconnection.
         """
         client_wrapper.logger.critical("Reconnected! {}".format(client_wrapper.netid))
         _, protocol = f.result()
-        protocol.register(client_wrapper.nick, client_wrapper.user, client_wrapper.realname, client_wrapper.mode, client_wrapper.password)
+        protocol.register(client_wrapper.nick, client_wrapper.user, client_wrapper.realname, client_wrapper.mode,
+                          client_wrapper.password)
         protocol.channels_to_join = client_wrapper.channels_to_join
         protocol.server_info = client_wrapper.server_info
         protocol.netid = client_wrapper.netid
         protocol.wrapper = client_wrapper
         signal("netid-available").send(protocol)
         client_wrapper.protocol = protocol
+
     asyncio.async(connector).add_done_callback(reconnected)
+
 
 signal("connection-lost").connect(disconnected)
 
