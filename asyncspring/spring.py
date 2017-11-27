@@ -28,14 +28,14 @@ def load_plugins(*plugins):
 
 class User:
     """
-    Represents a user on IRC, with their nickname, username, and hostname.
+    Represents a user on SpringRTS Lobby, with their nickname, username, and hostname.
     """
 
-    def __init__(self, nick, user, host):
-        self.nick = nick
-        self.user = user
-        self.host = host
-        self.hostmask = "{}!{}@{}".format(nick, user, host)
+    def __init__(self, username, password, email):
+        self.username = username
+        self.password = password
+        self.email = email
+        # self.hostmask = "{}!{}@{}".format(nick, user, host)
         self._register_wait = 0
 
     @classmethod
@@ -82,8 +82,7 @@ class LobbyProtocol(asyncio.Protocol):
         self.last_pong = 0
         self.lag = 0
         self.buf = ""
-        self.old_nickname = None
-        self.nickname = ""
+        self.username = ""
         self.server_supports = collections.defaultdict(lambda *_: None)
         self.queue = []
         self.queue_timer = 1.5
@@ -171,11 +170,14 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send registration messages to SpringLobby Server.
         """
-
+        """
         if self.email:
             self.writeln(f"REGISTER {self.username} {self.password} {self.email}")
         else:
             self.writeln(f"REGISTER {self.username} {self.password}")
+        """
+
+        self.writeln(f"LOGIN {self.username} {self.password} 3200 * TASClient 0.30")
 
         self.logger.debug("Sent registration information")
         signal("registration-complete").send(self)
@@ -192,7 +194,7 @@ class LobbyProtocol(asyncio.Protocol):
 
     def join(self, channel, key=None):
         """
-        Join channel.
+        Join a channel.
         """
 
         if key:
@@ -202,9 +204,9 @@ class LobbyProtocol(asyncio.Protocol):
 
         return self
 
-    def part(self, channel):
+    def leave(self, channel):
         """
-        Leave channel.
+        Leave a channel.
         """
 
         self.writeln(f"LEAVE {channel}")
