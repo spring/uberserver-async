@@ -336,4 +336,4 @@ def disconnected(client_wrapper):
 
 signal("connection-lost").connect(disconnected)
 
-import asyncspring.asyncspring.plugins.core
+import asyncspring.plugins.core

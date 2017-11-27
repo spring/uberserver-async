@@ -1,6 +1,6 @@
 from blinker import signal
-from asyncspring.asyncspring.spring import get_user
-from asyncspring.asyncspring.parser import RFC1459Message
+from asyncspring.spring import get_user
+from asyncspring.parser import RFC1459Message
 
 import asyncio
 import logging
