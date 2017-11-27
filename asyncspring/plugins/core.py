@@ -1,6 +1,6 @@
 from blinker import signal
-from asyncirc.irc import get_user
-from asyncirc.parser import RFC1459Message
+from asyncspring.asyncspring.spring import get_user
+from asyncspring.asyncspring.parser import RFC1459Message
 
 import asyncio
 import logging
@@ -12,7 +12,7 @@ ping_clients = []
 
 
 def _pong(message):
-    message.client.writeln("PONG {}".format(message.params[0]))
+    message.client.writeln(f"PONG {message.params[0]}")
 
 
 def _redispatch_message_common(message, mtype):
@@ -25,7 +25,19 @@ def _redispatch_message_common(message, mtype):
         signal("public-{}".format(mtype)).send(message, user=user, target=target, text=text)
 
 
-def _redispatch_privmsg(message):
+def _redispatch_say(message):
+    _redispatch_message_common(message, "message")
+
+
+def _redispatch_sayex(message):
+    _redispatch_message_common(message, "message")
+
+
+def _redispatch_sayprivate(message):
+    _redispatch_message_common(message, "message")
+
+
+def _redispatch_sayprivateex(message):
     _redispatch_message_common(message, "message")
 
 
@@ -107,7 +119,7 @@ def _nick_in_use(message):
         message.client.nickname = s
         message.client.writeln("NICK {}".format(s))
 
-    loop.call_later(5, callback)
+    # loop.call_later(5, callback)
 
 
 def _ping_servers():
@@ -124,19 +136,24 @@ def _catch_pong(message):
     message.client.lag = message.client.last_pong - message.client.last_ping
 
 
-def _redispatch_irc(message):
-    signal("irc-{}".format(message.verb.lower())).send(message)
+def _redispatch_spring(message):
+    signal("spring-{}".format(message.verb.lower())).send(message)
 
 
 def _redispatch_raw(client, text):
     message = RFC1459Message.from_message(text)
     message.client = client
-    signal("irc").send(message)
+    signal("spring").send(message)
 
 
 def _register_client(client):
     logger.debug("Sending real registration message")
     asyncio.get_event_loop().call_later(1, client._register)
+
+
+def _login_client(client):
+    logger.debug("Server login")
+    asyncio.get_event_loop().call_later(1, client._login)
 
 
 def _queue_ping(client):
@@ -152,18 +169,25 @@ def _connection_registered(message):
 
 
 signal("raw").connect(_redispatch_raw)
-signal("irc").connect(_redispatch_irc)
+signal("spring").connect(_redispatch_spring)
 signal("connected").connect(_register_client)
-signal("irc-ping").connect(_pong)
-signal("irc-pong").connect(_catch_pong)
-signal("irc-privmsg").connect(_redispatch_privmsg)
-signal("irc-notice").connect(_redispatch_notice)
-signal("irc-join").connect(_redispatch_join)
-signal("irc-part").connect(_redispatch_part)
-signal("irc-quit").connect(_redispatch_quit)
-signal("irc-kick").connect(_redispatch_kick)
-signal("irc-nick").connect(_redispatch_nick)
-signal("irc-mode").connect(_parse_mode)
-signal("irc-005").connect(_server_supports)
-signal("irc-433").connect(_nick_in_use)
-signal("irc-001").connect(_connection_registered)
+
+signal("spring-login").connect(_login_client)
+signal("spring-ping").connect(_pong)
+signal("spring-pong").connect(_catch_pong)
+
+signal("spring-say").connect(_redispatch_say)
+signal("spring-sayex").connect(_redispatch_sayex)
+signal("spring-sayprivate").connect(_redispatch_sayprivate)
+signal("spring-sayprivateex").connect(_redispatch_sayprivateex)
+
+signal("spring-notice").connect(_redispatch_notice)
+signal("spring-join").connect(_redispatch_join)
+signal("spring-part").connect(_redispatch_part)
+signal("spring-quit").connect(_redispatch_quit)
+signal("spring-kick").connect(_redispatch_kick)
+signal("spring-nick").connect(_redispatch_nick)
+signal("spring-mode").connect(_parse_mode)
+signal("spring-005").connect(_server_supports)
+signal("spring-433").connect(_nick_in_use)
+signal("spring-001").connect(_connection_registered)

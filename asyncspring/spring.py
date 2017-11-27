@@ -47,7 +47,7 @@ class User:
         return self(None, None, hostmask)
 
 
-class IRCProtocolWrapper:
+class LobbyProtocolWrapper:
     """
     Wraps an IRCProtocol object to allow for automatic reconnection. Only used
     internally.
@@ -68,9 +68,9 @@ class IRCProtocolWrapper:
             setattr(self.protocol, attr, val)
 
 
-class IRCProtocol(asyncio.Protocol):
+class LobbyProtocol(asyncio.Protocol):
     """
-    Represents a connection to IRC.
+    Represents a connection to SpringRTS Lobby.
     """
 
     def connection_made(self, transport):
@@ -97,7 +97,8 @@ class IRCProtocol(asyncio.Protocol):
         self.process_queue()
 
     def data_received(self, data):
-        if not self.work: return
+        if not self.work:
+            return
         data = data.decode()
 
         self.buf += data
@@ -120,7 +121,8 @@ class IRCProtocol(asyncio.Protocol):
         Pull data from the pending messages queue and send it. Schedule ourself
         to be executed again later.
         """
-        if not self.work: return
+        if not self.work:
+            return
         if self.queue:
             self._writeln(self.queue.pop(0))
         loop.call_later(self.queue_timer, self.process_queue)
@@ -138,7 +140,7 @@ class IRCProtocol(asyncio.Protocol):
 
     def _writeln(self, line):
         """
-        Send a raw message to IRC immediately.
+        Send a raw message to SpringRTS Lobby immediately.
         """
         if not isinstance(line, bytes):
             line = line.encode("utf-8")
@@ -148,89 +150,118 @@ class IRCProtocol(asyncio.Protocol):
 
     def writeln(self, line):
         """
-        Queue a message for sending to the currently connected IRC server.
+        Queue a message for sending to the currently connected SpringRTS Lobby server.
         """
         self.queue.append(line)
         return self
 
-    def register(self, nick, user, realname, mode="+i", password=None):
+    def register(self, username, password, email=None):
         """
         Queue registration with the server. This includes sending nickname,
         ident, realname, and password (if required by the server).
         """
-        self.nick = nick
-        self.user = user
-        self.realname = realname
-        self.mode = mode
+
+        self.username = username
         self.password = password
+        self.email = email
+
         return self
 
     def _register(self):
         """
-        Send registration messages to IRC.
+        Send registration messages to SpringLobby Server.
         """
-        if self.password:
-            self.writeln("PASS {}".format(self.password))
-        self.writeln("USER {0} {1} {0} :{2}".format(self.user, self.mode, self.realname))
-        self.writeln("NICK {}".format(self.nick))
+
+        if self.email:
+            self.writeln(f"REGISTER {self.username} {self.password} {self.email}")
+        else:
+            self.writeln(f"REGISTER {self.username} {self.password}")
+
         self.logger.debug("Sent registration information")
         signal("registration-complete").send(self)
-        self.nickname = self.nick
+        self.nickname = self.username
 
     ## protocol abstractions
 
-    def join(self, channels):
+    def login(self, username, password):
         """
-        Join channels. Pass a list to join all the channels, or a string to
-        join a single channel. If registration with the server is not yet
-        complete, this will queue channels to join when registration is done.
+        Send Login message to SpringLobby Server.
         """
-        if not isinstance(channels, list):
-            channels = [channels]
-        channels_str = ",".join(channels)
 
-        if not self.registration_complete:
-            self.channels_to_join.append(channels_str)
+        self.writeln(f"LOGIN {username} {password} 3200 * TASClient 0.30")
+
+    def join(self, channel, key=None):
+        """
+        Join channel.
+        """
+
+        if key:
+            self.writeln(f"JOIN {channel} {key}")
         else:
-            self.writeln("JOIN {}".format(channels_str))
+            self.writeln(f"JOIN {channel}")
 
         return self
 
-    def part(self, channels):
+    def part(self, channel):
         """
-        Leave channels. Pass a list to leave all the channels, or a string to
-        leave a single channel. If registration with the server is not yet
-        complete, you're dumb.
+        Leave channel.
         """
-        if not isinstance(channels, list):
-            channels = [channels]
-        channels_str = ",".join(channels)
-        self.writeln("PART {}".format(channels_str))
 
-    def say(self, target_str, message):
+        self.writeln(f"LEAVE {channel}")
+
+    def say(self, channel, message):
         """
-        Send a PRIVMSG to IRC.
+        Send a MSG to SpringRTS Lobby room.
         Carriage returns and line feeds are stripped to prevent bugs.
         """
+
         message = message.replace("\n", "").replace("\r", "")
 
         while message:
-            self.writeln("PRIVMSG {} :{}".format(target_str, message[:400]))
+            self.writeln(f"SAY {channel} :{message[:400]}")
             message = message[400:]
 
-    def do(self, target_str, message):
+    def say_ex(self, channel, message):
         """
-        Send an ACTION to IRC. Must not be longer than 400 chars.
+        Send a MSG to SpringRTS Lobby room using emote.
         Carriage returns and line feeds are stripped to prevent bugs.
         """
-        if len(message) <= 400:
-            message = message.replace("\n", "").replace("\r", "")
-            self.writeln("PRIVMSG {} :\x01ACTION {}\x01".format(target_str, message[:400]))
+
+        message = message.replace("\n", "").replace("\r", "")
+
+        while message:
+            self.writeln(f"SAYEX {channel} :{message[:400]}")
+            message = message[400:]
+
+    def say_private(self, username, message):
+        """
+        Send a private message to SpringRTS Lobby user.
+        Carriage returns and line feeds are stripped to prevent bugs.
+        """
+
+        message = message.replace("\n", "").replace("\r", "")
+
+        while message:
+            self.writeln(f"SAYPRIVATE {username} :{message[:400]}")
+            message = message[400:]
+
+    def say_private_ex(self, username, message):
+        """
+        Send a private message to SpringRTS Lobby user in emote.
+        Carriage returns and line feeds are stripped to prevent bugs.
+        """
+
+        message = message.replace("\n", "").replace("\r", "")
+
+        while message:
+            self.writeln(f"SAYPRIVATEEX {username} :{message[:400]}")
+            message = message[400:]
 
     def nick_in_use_handler(self):
         """
         Choose a nickname to use if the requested one is already in use.
         """
+
         s = "a{}".format("".join([random.choice("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(8)]))
         return s
 
@@ -256,11 +287,12 @@ def get_user(hostmask):
 
 def connect(server, port=8200, use_ssl=False):
     """
-    Connect to an IRC server. Returns a proxy to an IRCProtocol object.
+    Connect to an SpringRTS Lobby server. Returns a proxy to an LobbyProtocol object.
     """
-    connector = loop.create_connection(IRCProtocol, host=server, port=port, ssl=use_ssl)
+
+    connector = loop.create_connection(LobbyProtocol, host=server, port=port, ssl=use_ssl)
     transport, protocol = loop.run_until_complete(connector)
-    protocol.wrapper = IRCProtocolWrapper(protocol)
+    protocol.wrapper = LobbyProtocolWrapper(protocol)
     protocol.server_info = {"host": server, "port": port, "ssl": use_ssl}
     protocol.netid = "{}:{}:{}{}".format(id(protocol), server, port, "+" if use_ssl else "-")
     signal("netid-available").send(protocol)
@@ -270,9 +302,10 @@ def connect(server, port=8200, use_ssl=False):
 
 def disconnected(client_wrapper):
     """
-    Either reconnect the IRCProtocol object, or exit, depending on
-    configuration. Called by IRCProtocol when we lose the connection.
+    Either reconnect the LobbyProtocol object, or exit, depending on
+    configuration. Called by LobbyProtocol when we lose the connection.
     """
+
     client_wrapper.protocol.work = False
     client_wrapper.logger.critical("Disconnected from {}. Attempting to reconnect...".format(client_wrapper.netid))
     signal("disconnected").send(client_wrapper.protocol)
@@ -280,12 +313,13 @@ def disconnected(client_wrapper):
         import sys
         sys.exit(2)
 
-    connector = loop.create_connection(IRCProtocol, **client_wrapper.server_info)
+    connector = loop.create_connection(LobbyProtocol, **client_wrapper.server_info)
 
     def reconnected(f):
         """
         Callback function for a successful reconnection.
         """
+
         client_wrapper.logger.critical("Reconnected! {}".format(client_wrapper.netid))
         _, protocol = f.result()
         protocol.register(client_wrapper.nick, client_wrapper.user, client_wrapper.realname, client_wrapper.mode,
@@ -302,4 +336,4 @@ def disconnected(client_wrapper):
 
 signal("connection-lost").connect(disconnected)
 
-import asyncirc.plugins.core
+import asyncspring.asyncspring.plugins.core
