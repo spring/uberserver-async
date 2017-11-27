@@ -176,7 +176,7 @@ class LobbyProtocol(asyncio.Protocol):
         else:
             self.writeln(f"REGISTER {self.username} {self.password}")
         """
-
+        print(self.username)
         self.writeln(f"LOGIN {self.username} {self.password} 3200 * TASClient 0.30")
 
         self.logger.debug("Sent registration information")
