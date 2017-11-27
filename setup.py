@@ -1,12 +1,12 @@
 from distutils.core import setup
 
 setup(
-        name="asyncio-irc",
+        name="asyncio-spring",
         version="0.2.1",
-        description="irc based on asyncio",
-        author="Fox Wilson",
-        author_email="fwilson@fwilson.me",
-        url="https://github.com/watchtower/asyncirc",
+        description="spring lobby client based on asyncio",
+        author="Fox Wilson, TurBoss",
+        author_email="fwilson@fwilson.me, j.l.toledano.l@gmail.com",
+        url="https://github.com/TurBoss/asyncspring",
         install_requires=["blinker"],
-        packages=["asyncirc", "asyncirc.plugins"]
+        packages=["asyncspring", "asyncspring.plugins"]
 )
