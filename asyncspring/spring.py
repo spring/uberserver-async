@@ -77,7 +77,7 @@ class LobbyProtocol(asyncio.Protocol):
         self.work = True
         self.transport = transport
         self.wrapper = None
-        self.logger = logging.getLogger("asyncirc.IRCProtocol")
+        self.logger = logging.getLogger("asyncspring.IRCProtocol")
         self.last_ping = float('inf')
         self.last_pong = 0
         self.lag = 0

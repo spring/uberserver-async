@@ -1,11 +1,11 @@
-# asyncirc [![Build Status](https://travis-ci.org/watchtower/asyncirc.svg?branch=master)](https://travis-ci.org/watchtower/asyncirc) [![Code Climate](https://codeclimate.com/github/watchtower/asyncirc/badges/gpa.svg)](https://codeclimate.com/github/watchtower/asyncirc)
+# asyncspring 
 
-**Asyncirc** is an asyncio-based IRC framework for Python.
+**Asyncspring** is an asyncio-based SpringRTS framework for Python.
 
 ## Installation
 
 ```
-pip install asyncio-irc
+pip install pip install "git+https://github.com/TurBoss/asyncspring.git"
 ```
 
 And you're done!
@@ -15,10 +15,10 @@ You can also use `setup.py` to manually install from a git version.
 ## Connecting
 
 ```python
-from asyncirc import irc
+from asyncspring import spring
 
-bot = irc.connect("chat.freenode.net", 6697, use_ssl=True)
-bot.register("nickname", "ident", "realname", password="pass") # password optional
+bot = spring.connect("lobby.springrts.com", 8200, use_ssl=False)
+bot.register("username", password="pass")
 ```
 
 ## Subscribing to events
@@ -36,14 +36,14 @@ def incoming_message(parsed, user, target, text):
 ## Using plugins
 
 ```python
-import asyncirc.plugins.tracking # channel/user state tracking
-import asyncirc.plugins.addressed # events that fire when the bot is addressed
-import asyncirc.plugins.nickserv # events that fire on nickserv authentication responses
+import asyncspring.plugins.tracking # channel/user state tracking
+import asyncspring.plugins.addressed # events that fire when the bot is addressed
+import asyncspring.plugins.nickserv # events that fire on nickserv authentication responses
 ```
 
-## Writing code without a reference to the IRCProtocol object
+## Writing code without a reference to the LobbyProtocol object
 
-Asyncirc uses the excellent [Blinker](https://pythonhosted.org/blinker/) library.
+Asyncspring uses the excellent [Blinker](https://pythonhosted.org/blinker/) library.
 That means that you can just run `from blinker import signal` and hook into
-asyncirc's events without needing a reference to the IRCProtocol object. This is
+asyncspring's events without needing a reference to the LobbyPRotocol object. This is
 especially useful in writing plugins; take a look at plugin code for examples.

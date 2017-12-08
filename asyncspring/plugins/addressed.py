@@ -18,4 +18,4 @@ def handle_public_messages(message, user, target, text):
 
 
 signal("public-message").connect(handle_public_messages)
-signal("plugin-registered").send("asyncirc.plugins.addressed")
+signal("plugin-registered").send("asyncspring.plugins.addressed")

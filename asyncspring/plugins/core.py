@@ -6,7 +6,7 @@ import asyncio
 import logging
 import time
 
-logger = logging.getLogger("asyncirc.plugins.core")
+logger = logging.getLogger("asyncspring.plugins.core")
 
 ping_clients = []
 

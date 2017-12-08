@@ -3,9 +3,9 @@ import base64
 
 import logging
 
-logger = logging.getLogger("asyncirc.plugins.sasl")
+logger = logging.getLogger("asyncspring.plugins.sasl")
 
-import asyncspring.asyncspring.plugins.cap
+import asyncspring.plugins.cap
 
 authentication_info = {}
 
@@ -18,7 +18,7 @@ def auth(client, username, password):
     Queue an authentication request using SASL PLAIN on the given client, with
     the given account name and password.
     """
-    asyncirc.plugins.cap.cap_wait(client.netid, "sasl")
+    asyncspring.plugins.cap.cap_wait(client.netid, "sasl")
     authentication_info[client.netid] = [username, password]
 
 
@@ -50,7 +50,7 @@ def handle_900(message):
     logger.debug("SASL authentication complete.")
     signal("sasl-auth-complete").send(message)
     signal("auth-complete").send(message)
-    asyncirc.plugins.cap.cap_done(message.client, "sasl")
+    asyncspring.plugins.cap.cap_done(message.client, "sasl")
 
 
 def handle_failure(message):
