@@ -17,7 +17,8 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 """
 
-class RFC1459Message(object):
+
+class LobbyMessage(object):
     """
     Represents an IRC message.
     """
@@ -48,7 +49,7 @@ class RFC1459Message(object):
     @classmethod
     def from_message(cls, message):
         """
-        Create a new RFC1459Message from an unparsed IRC line.
+        Create a new LobbyMessage from an unparsed Lobby line.
         """
         if isinstance(message, bytes):
             message = message.decode('UTF-8', 'replace')
@@ -65,7 +66,7 @@ class RFC1459Message(object):
                 k, v = tag.split('=', 1)
                 tags[k] = v
 
-        source = None
+        source = "Lobby"
         if s[0].startswith(':'):
             source = s[0][1:]
             s = s[1:]
@@ -85,4 +86,4 @@ class RFC1459Message(object):
         return cls.from_data(verb, params, source, tags)
 
     def __str__(self):
-        return 'RFC1459Message: verb={}, params={}, source={}'.format(self.verb, self.params, self.source)
+        return f"LobbyMessage: verb={self.verb}, params={self.params}, source={self.source}"

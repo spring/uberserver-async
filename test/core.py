@@ -1,34 +1,44 @@
 from asynctest import test, TestManager
-from asyncirc.plugins import core
+from asyncspring.plugins import core
 from blinker import signal
-from _mocks import Client
+from test._mocks import Client
+
 
 def receive_pong(line):
     test_ping.succeed_if(line == "PONG irc.example.com")
 
+
 def check_example_user(u):
     return u.nick == "example" and u.user == "example" and u.host == "example.com"
+
 
 def try_public_thing(test, user, target, text):
     test.succeed_if(check_example_user(user) and target == "#example" and text.startswith("example public "))
 
+
 def try_private_thing(test, user, text):
     test.succeed_if(check_example_user(user) and text.startswith("example private "))
+
 
 def receive_public_message_signal(message, user, target, text):
     try_public_thing(test_public_message_dispatch, user, target, text)
 
+
 def receive_private_message_signal(message, user, target, text):
     try_private_thing(test_private_message_dispatch, user, text)
+
 
 def receive_public_notice_signal(message, user, target, text):
     try_public_thing(test_public_notice_dispatch, user, target, text)
 
+
 def receive_private_notice_signal(message, user, target, text):
     try_private_thing(test_private_notice_dispatch, user, text)
 
+
 def receive_join_signal(message, user, channel):
     test_join_dispatch.succeed_if(check_example_user(user) and channel == "#example")
+
 
 def receive_part_signal(message, user, channel, reason):
     if check_example_user(user) and channel == "#example" and reason == "example part reason":
@@ -40,20 +50,27 @@ def receive_part_signal(message, user, channel, reason):
     else:
         test_part_dispatch_no_reason.failure()
 
+
 def receive_quit_signal(message, user, reason):
     test_quit_dispatch.succeed_if(check_example_user(user) and reason == "Quit (Example reason)")
 
+
 def receive_kick_signal(message, kicker, kickee, channel, reason):
-    test_kick_dispatch.succeed_if(check_example_user(kicker) and kickee == "user" and reason == "kicked" and channel == "#channel")
+    test_kick_dispatch.succeed_if(
+        check_example_user(kicker) and kickee == "user" and reason == "kicked" and channel == "#channel")
+
 
 def receive_nick_signal(message, user, new_nick):
     test_nick_dispatch.succeed_if(check_example_user(user) and new_nick == "examp[le]")
 
+
 def receive_plusmode(message, mode, arg, user, channel):
     test_mode_set.succeed_if(mode == "s")
 
+
 def receive_minusmode(message, mode, arg, user, channel):
     test_mode_unset.succeed_if(mode == "u")
+
 
 signal("public-message").connect(receive_public_message_signal)
 signal("private-message").connect(receive_private_message_signal)
@@ -69,63 +86,79 @@ signal("-mode").connect(receive_minusmode)
 
 client = Client()
 
+
 @test("should respond to IRC PING messages")
 def test_ping():
     client = Client(writeln=receive_pong)
     signal("raw").send(client, text="PING irc.example.com")
 
+
 @test("should redispatch messages sent to channels")
 def test_public_message_dispatch():
     signal("raw").send(client, text=":example!example@example.com PRIVMSG #example :example public message")
+
 
 @test("should redispatch messages sent privately")
 def test_private_message_dispatch():
     signal("raw").send(client, text=":example!example@example.com PRIVMSG bot :example private message")
 
+
 @test("should redispatch notices sent to channels")
 def test_public_notice_dispatch():
     signal("raw").send(client, text=":example!example@example.com NOTICE #example :example public notice")
+
 
 @test("should redispatch notices sent privately")
 def test_private_notice_dispatch():
     signal("raw").send(client, text=":example!example@example.com NOTICE bot :example private notice")
 
+
 @test("should redispatch join messages")
 def test_join_dispatch():
     signal("raw").send(client, text=":example!example@example.com JOIN #example")
+
 
 @test("should redispatch part messages with reasons")
 def test_part_dispatch_reason():
     signal("raw").send(client, text=":example!example@example.com PART #example :example part reason")
 
+
 @test("should redispatch part messages without reasons, setting reason=None")
 def test_part_dispatch_no_reason():
     signal("raw").send(client, text=":example!example@example.com PART #example2")
+
 
 @test("should redispatch quit messages")
 def test_quit_dispatch():
     signal("raw").send(client, text=":example!example@example.com QUIT :Quit (Example reason)")
 
+
 @test("should redispatch kick messages")
 def test_kick_dispatch():
     signal("raw").send(client, text=":example!example@example.com KICK #channel user :kicked")
+
 
 @test("should redispatch nick changes")
 def test_nick_dispatch():
     signal("raw").send(client, text=":example!example@example.com NICK examp[le]")
 
+
 @test("should recognize ISUPPORT messages and update the server_supports dict")
 def test_isupport():
-    signal("raw").send(client, text=":irc.example.com 005 bot CHANMODES=eIbq,k,flj,CFLMPQScgimnprsutz PREFIX=(ov)@+ EXTREMELY-VERBOSE-FEATURE-NAMES :Are supported by this server")
+    signal("raw").send(client,
+                       text=":irc.example.com 005 bot CHANMODES=eIbq,k,flj,CFLMPQScgimnprsutz PREFIX=(ov)@+ EXTREMELY-VERBOSE-FEATURE-NAMES :Are supported by this server")
     test_isupport.succeed_if(client.server_supports["EXTREMELY-VERBOSE-FEATURE-NAMES"])
+
 
 @test("should properly parse setting modes")
 def test_mode_set():
     signal("raw").send(client, text=":irc.example.com MODE #channel +s")
 
+
 @test("should properly parse unsetting modes")
 def test_mode_unset():
     signal("raw").send(client, text=":irc.example.com MODE #channel -u")
+
 
 manager = TestManager([
     test_ping, test_public_message_dispatch, test_private_message_dispatch,
