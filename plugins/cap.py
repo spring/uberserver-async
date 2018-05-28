@@ -1,9 +1,5 @@
 from blinker import signal
 
-import logging
-
-logger = logging.getLogger("asyncspring.plugins.cap")
-
 capabilities_requested = {}
 capabilities_available = {}
 capabilities_pending = {}

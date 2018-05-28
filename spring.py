@@ -85,6 +85,7 @@ class LobbyProtocol(asyncio.Protocol):
         self.username = ""
         self.password = ""
         self.nick = ""
+        self.nickname = ""
         self.user = ""
         self.realname = ""
         self.email = ""
@@ -354,4 +355,4 @@ def disconnected(client_wrapper):
 
 signal("connection-lost").connect(disconnected)
 
-import asyncspring.plugins.core
+import plugins.core

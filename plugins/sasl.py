@@ -3,9 +3,8 @@ import base64
 
 import logging
 
-logger = logging.getLogger("asyncspring.plugins.sasl")
 
-import asyncspring.plugins.cap
+import plugins.cap
 
 authentication_info = {}
 

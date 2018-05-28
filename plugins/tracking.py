@@ -1,5 +1,5 @@
 from blinker import signal
-from asyncspring.parser import LobbyMessage
+from parser import LobbyMessage
 from collections import defaultdict
 
 

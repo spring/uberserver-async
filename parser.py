@@ -18,7 +18,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 """
 
 
-class LobbyMessage(object):
+class LobbyMessage:
     """
     Represents an IRC message.
     """

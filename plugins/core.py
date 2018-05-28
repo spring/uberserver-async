@@ -1,12 +1,10 @@
 from blinker import signal
-from asyncspring.spring import get_user
-from asyncspring.parser import LobbyMessage
+from spring import get_user
+from parser import LobbyMessage
 
 import asyncio
-import logging
 import time
 
-logger = logging.getLogger("asyncspring.plugins.core")
 
 ping_clients = []
 
@@ -25,19 +23,19 @@ def _redispatch_message_common(message, mtype):
         signal("public-{}".format(mtype)).send(message, user=user, target=target, text=text)
 
 
-def _redispatch_say(message):
+def _redispatch_said(message):
     _redispatch_message_common(message, "message")
 
 
-def _redispatch_sayex(message):
+def _redispatch_saidex(message):
     _redispatch_message_common(message, "message")
 
 
-def _redispatch_sayprivate(message):
+def _redispatch_saidprivate(message):
     _redispatch_message_common(message, "message")
 
 
-def _redispatch_sayprivateex(message):
+def _redispatch_saidprivateex(message):
     _redispatch_message_common(message, "message")
 
 
@@ -45,12 +43,12 @@ def _redispatch_notice(message):
     _redispatch_message_common(message, "notice")
 
 
-def _redispatch_join(message):
+def _redispatch_joined(message):
 
     signal("join").send(message, user=get_user(message.source), channel=message.params[0])
 
 
-def _redispatch_part(message):
+def _redispatch_left(message):
     user = get_user(message.source)
     channel, reason = message.params[0], None
     if len(message.params) > 1:
@@ -174,10 +172,6 @@ def _connection_denied(message):
     print("LOGGIN DENIED BY SERVER")
 
 
-def _user_joined(message):
-    print(message)
-
-
 signal("raw").connect(_redispatch_raw)
 signal("spring").connect(_redispatch_spring)
 signal("connected").connect(_login_client)
@@ -185,20 +179,18 @@ signal("connected").connect(_login_client)
 signal("spring-ping").connect(_pong)
 signal("spring-pong").connect(_catch_pong)
 
-signal("spring-say").connect(_redispatch_say)
-signal("spring-sayex").connect(_redispatch_sayex)
-signal("spring-sayprivate").connect(_redispatch_sayprivate)
-signal("spring-sayprivateex").connect(_redispatch_sayprivateex)
+signal("spring-said").connect(_redispatch_said)
+signal("spring-saidex").connect(_redispatch_saidex)
+signal("spring-saidprivate").connect(_redispatch_saidprivate)
+signal("spring-saidprivateex").connect(_redispatch_saidprivateex)
 
 signal("spring-notice").connect(_redispatch_notice)
-signal("spring-join").connect(_redispatch_join)
-signal("spring-part").connect(_redispatch_part)
+signal("spring-joined").connect(_redispatch_joined)
+signal("spring-left").connect(_redispatch_left)
 signal("spring-quit").connect(_redispatch_quit)
 signal("spring-kick").connect(_redispatch_kick)
 signal("spring-nick").connect(_redispatch_nick)
 signal("spring-mode").connect(_parse_mode)
 signal("spring-005").connect(_server_supports)
-signal("spring-433").connect(_nick_in_use)
 signal("spring-accepted").connect(_connection_registered)
 signal("spring-denied").connect(_connection_denied)
-signal("spring-joined").connect(_user_joined)
