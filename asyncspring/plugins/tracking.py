@@ -1,5 +1,5 @@
 from blinker import signal
-from asyncspring.parser import RFC1459Message
+from asyncspring.parser import LobbyMessage
 from collections import defaultdict
 
 
@@ -78,7 +78,7 @@ def parse_hostmask(hostmask):
 
 
 def get_user(netid_or_message, hostmask=None):
-    if isinstance(netid_or_message, RFC1459Message):
+    if isinstance(netid_or_message, LobbyMessage):
         netid = netid_or_message.client.netid
         if hostmask is None:
             hostmask = netid_or_message.source
@@ -112,7 +112,7 @@ def get_user(netid_or_message, hostmask=None):
 
 
 def get_channel(netid_or_message, x):
-    if isinstance(netid_or_message, RFC1459Message):
+    if isinstance(netid_or_message, LobbyMessage):
         netid = netid_or_message.client.netid
     else:
         netid = netid_or_message

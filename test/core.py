@@ -1,7 +1,7 @@
 from asynctest import test, TestManager
 from asyncspring.plugins import core
 from blinker import signal
-from _mocks import Client
+from test._mocks import Client
 
 
 def receive_pong(line):

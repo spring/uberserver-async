@@ -83,6 +83,12 @@ class LobbyProtocol(asyncio.Protocol):
         self.lag = 0
         self.buf = ""
         self.username = ""
+        self.password = ""
+        self.nick = ""
+        self.user = ""
+        self.realname = ""
+        self.email = ""
+        self.mode = ""
         self.server_supports = collections.defaultdict(lambda *_: None)
         self.queue = []
         self.queue_timer = 1.5
@@ -92,7 +98,7 @@ class LobbyProtocol(asyncio.Protocol):
         self.autoreconnect = True
 
         signal("connected").send(self)
-        self.logger.info("Connection success.")
+        print("Connection success.")
         self.process_queue()
 
     def data_received(self, data):
@@ -105,7 +111,7 @@ class LobbyProtocol(asyncio.Protocol):
             index = self.buf.index("\n")
             line_received = self.buf[:index].strip()
             self.buf = self.buf[index + 1:]
-            self.logger.debug(line_received)
+            print(line_received)
             signal("raw").send(self, text=line_received)
 
     def connection_lost(self, exc):
@@ -131,7 +137,7 @@ class LobbyProtocol(asyncio.Protocol):
             """
             Register an event with Blinker. Convienence function.
             """
-            self.logger.debug("Registering function for event {}".format(event))
+            print("Registering function for event {}".format(event))
             signal(event).connect(f)
             return f
 
@@ -143,7 +149,7 @@ class LobbyProtocol(asyncio.Protocol):
         """
         if not isinstance(line, bytes):
             line = line.encode("utf-8")
-        self.logger.debug(line)
+        print(line)
         self.transport.write(line + b"\r\n")
         signal("irc-send").send(line.decode())
 
@@ -170,16 +176,12 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send registration messages to SpringLobby Server.
         """
-        """
         if self.email:
             self.writeln(f"REGISTER {self.username} {self.password} {self.email}")
         else:
             self.writeln(f"REGISTER {self.username} {self.password}")
-        """
-        print(self.username)
-        self.writeln(f"LOGIN {self.username} {self.password} 3200 * TASClient 0.30")
 
-        self.logger.debug("Sent registration information")
+        print("Sent registration information")
         signal("registration-complete").send(self)
         self.nickname = self.username
 
@@ -187,10 +189,23 @@ class LobbyProtocol(asyncio.Protocol):
 
     def login(self, username, password):
         """
+        Queue registration with the server. This includes sending nickname,
+        ident, realname, and password (if required by the server).
+        """
+        self.username = username
+        self.password = password
+
+        return self
+
+    def _login(self):
+        """
         Send Login message to SpringLobby Server.
         """
 
-        self.writeln(f"LOGIN {username} {password} 3200 * TASClient 0.30")
+        self.writeln(f"LOGIN {self.username} {self.password} 3200 * TurBoMatrix 0.1")
+        signal("login-complete").send(self)
+
+        return self
 
     def join(self, channel, key=None):
         """
@@ -282,6 +297,7 @@ class LobbyProtocol(asyncio.Protocol):
 
 
 def get_user(hostmask):
+    print(hostmask)
     if "!" not in hostmask or "@" not in hostmask:
         return User(hostmask, hostmask, hostmask)
     return User.from_hostmask(hostmask)
@@ -291,7 +307,7 @@ def connect(server, port=8200, use_ssl=False):
     """
     Connect to an SpringRTS Lobby server. Returns a proxy to an LobbyProtocol object.
     """
-
+    print("connect")
     connector = loop.create_connection(LobbyProtocol, host=server, port=port, ssl=use_ssl)
     transport, protocol = loop.run_until_complete(connector)
     protocol.wrapper = LobbyProtocolWrapper(protocol)
@@ -299,6 +315,7 @@ def connect(server, port=8200, use_ssl=False):
     protocol.netid = "{}:{}:{}{}".format(id(protocol), server, port, "+" if use_ssl else "-")
     signal("netid-available").send(protocol)
     connections[protocol.netid] = protocol.wrapper
+
     return protocol.wrapper
 
 
@@ -309,7 +326,7 @@ def disconnected(client_wrapper):
     """
 
     client_wrapper.protocol.work = False
-    client_wrapper.logger.critical("Disconnected from {}. Attempting to reconnect...".format(client_wrapper.netid))
+    print("Disconnected from {}. Attempting to reconnect...".format(client_wrapper.netid))
     signal("disconnected").send(client_wrapper.protocol)
     if not client_wrapper.protocol.autoreconnect:
         import sys
@@ -322,10 +339,9 @@ def disconnected(client_wrapper):
         Callback function for a successful reconnection.
         """
 
-        client_wrapper.logger.critical("Reconnected! {}".format(client_wrapper.netid))
+        print("Reconnected! {}".format(client_wrapper.netid))
         _, protocol = f.result()
-        protocol.register(client_wrapper.nick, client_wrapper.user, client_wrapper.realname, client_wrapper.mode,
-                          client_wrapper.password)
+        protocol.register(client_wrapper.user, client_wrapper.password)
         protocol.channels_to_join = client_wrapper.channels_to_join
         protocol.server_info = client_wrapper.server_info
         protocol.netid = client_wrapper.netid

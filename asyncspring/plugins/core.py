@@ -1,6 +1,6 @@
 from blinker import signal
 from asyncspring.spring import get_user
-from asyncspring.parser import RFC1459Message
+from asyncspring.parser import LobbyMessage
 
 import asyncio
 import logging
@@ -46,6 +46,7 @@ def _redispatch_notice(message):
 
 
 def _redispatch_join(message):
+
     signal("join").send(message, user=get_user(message.source), channel=message.params[0])
 
 
@@ -126,9 +127,9 @@ def _ping_servers():
     for client in ping_clients:
         if client.last_pong != 0 and time.time() - client.last_pong > 90:
             client.connection_lost(Exception())
-        client.writeln("PING :GNIP")
+        client.writeln("PING")
         client.last_ping = time.time()
-    asyncio.get_event_loop().call_later(60, _ping_servers)
+    asyncio.get_event_loop().call_later(29, _ping_servers)
 
 
 def _catch_pong(message):
@@ -137,22 +138,22 @@ def _catch_pong(message):
 
 
 def _redispatch_spring(message):
-    signal("spring-{}".format(message.verb.lower())).send(message)
+    signal(f"spring-{message.verb.lower()}").send(message)
 
 
 def _redispatch_raw(client, text):
-    message = RFC1459Message.from_message(text)
+    message = LobbyMessage.from_message(text)
     message.client = client
     signal("spring").send(message)
 
 
 def _register_client(client):
-    logger.debug("Sending real registration message")
+    print("Sending real registration message")
     asyncio.get_event_loop().call_later(1, client._register)
 
 
 def _login_client(client):
-    logger.debug("Server login")
+    print("Server login")
     asyncio.get_event_loop().call_later(1, client._login)
 
 
@@ -168,11 +169,19 @@ def _connection_registered(message):
         message.client.join(channel)
 
 
+def _connection_denied(message):
+    message.client.registration_complete = False
+    print("LOGGIN DENIED BY SERVER")
+
+
+def _user_joined(message):
+    print(message)
+
+
 signal("raw").connect(_redispatch_raw)
 signal("spring").connect(_redispatch_spring)
-signal("connected").connect(_register_client)
+signal("connected").connect(_login_client)
 
-signal("spring-login").connect(_login_client)
 signal("spring-ping").connect(_pong)
 signal("spring-pong").connect(_catch_pong)
 
@@ -190,4 +199,6 @@ signal("spring-nick").connect(_redispatch_nick)
 signal("spring-mode").connect(_parse_mode)
 signal("spring-005").connect(_server_supports)
 signal("spring-433").connect(_nick_in_use)
-signal("spring-001").connect(_connection_registered)
+signal("spring-accepted").connect(_connection_registered)
+signal("spring-denied").connect(_connection_denied)
+signal("spring-joined").connect(_user_joined)

@@ -7,6 +7,6 @@ setup(
     author="Fox Wilson, TurBoss",
     author_email="fwilson@fwilson.me, j.l.toledano.l@gmail.com",
     url="https://github.com/TurBoss/asyncspring",
-    install_requires=["blinker"],
+    install_requires=["blinker", 'pyCrypto'],
     packages=["asyncspring", "asyncspring.plugins"]
 )
