@@ -1,10 +1,7 @@
-from blinker import signal
+from asyncblink import signal
 import base64
 
-import logging
-
-
-import plugins.cap
+import asyncspring.plugins.cap
 
 authentication_info = {}
 

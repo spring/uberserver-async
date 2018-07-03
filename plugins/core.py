@@ -1,10 +1,9 @@
-from blinker import signal
-from spring import get_user
-from parser import LobbyMessage
+from asyncblink import signal
+from asyncspring.spring import get_user
+from asyncspring.parser import LobbyMessage
 
 import asyncio
 import time
-
 
 ping_clients = []
 
@@ -17,26 +16,27 @@ def _redispatch_message_common(message, mtype):
     target, text = message.params[0], message.params[1]
     user = get_user(message.source) if message.source else ''
     signal(mtype).send(message, user=user, target=target, text=text)
+    """
     if target == message.client.nickname:
         signal("private-{}".format(mtype)).send(message, user=user, target=target, text=text)
     else:
         signal("public-{}".format(mtype)).send(message, user=user, target=target, text=text)
-
+    """
 
 def _redispatch_said(message):
-    _redispatch_message_common(message, "message")
+    _redispatch_message_common(message, "said")
 
 
 def _redispatch_saidex(message):
-    _redispatch_message_common(message, "message")
+    _redispatch_message_common(message, "saidex")
 
 
 def _redispatch_saidprivate(message):
-    _redispatch_message_common(message, "message")
+    _redispatch_message_common(message, "said")
 
 
 def _redispatch_saidprivateex(message):
-    _redispatch_message_common(message, "message")
+    _redispatch_message_common(message, "saidex")
 
 
 def _redispatch_notice(message):
@@ -44,7 +44,6 @@ def _redispatch_notice(message):
 
 
 def _redispatch_joined(message):
-
     signal("join").send(message, user=get_user(message.source), channel=message.params[0])
 
 
@@ -101,7 +100,7 @@ def _parse_mode(message):
 
 def _server_supports(message):
     supports = message.params[1:-1]  # No need for "Are supported by this server" or bot's nickname
-    logging.debug("Server supports {}".format(supports))
+    print("Server supports {}".format(supports))
     for feature in supports:
         if "=" in feature:
             k, v = feature.split("=")
@@ -172,8 +171,37 @@ def _connection_denied(message):
     print("LOGGIN DENIED BY SERVER")
 
 
+def _parse_motd(message):
+    pass
+
+
+def _matrix_adduser(message):
+    pass
+
+
+def _matrix_removeuser(message):
+    pass
+
+
+def _matrix_joined(message):
+    pass
+
+
+def _matrix_left(message):
+    pass
+
+
+def _matrix_clients(message):
+    pass
+
+
+def _matrix_channeltopic(message):
+    pass
+
+
 signal("raw").connect(_redispatch_raw)
 signal("spring").connect(_redispatch_spring)
+
 signal("connected").connect(_login_client)
 
 signal("spring-ping").connect(_pong)
@@ -194,3 +222,14 @@ signal("spring-mode").connect(_parse_mode)
 signal("spring-005").connect(_server_supports)
 signal("spring-accepted").connect(_connection_registered)
 signal("spring-denied").connect(_connection_denied)
+
+signal("spring-motd").connect(_parse_motd)
+
+signal("spring-adduser").connect(_matrix_adduser)
+signal("spring-removeuser").connect(_matrix_removeuser)
+
+signal("spring-left").connect(_matrix_left)
+signal("spring-joined").connect(_matrix_joined)
+
+signal("spring-clients").connect(_matrix_clients)
+signal("spring-channeltopic").connect(_matrix_channeltopic)

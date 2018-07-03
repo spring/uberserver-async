@@ -1,10 +1,13 @@
+import sys
+
 import asyncio
 import collections
 import importlib
 import logging
 import random
 import ssl
-from blinker import signal
+
+from asyncblink import signal
 
 loop = asyncio.get_event_loop()
 
@@ -49,7 +52,7 @@ class User:
 
 class LobbyProtocolWrapper:
     """
-    Wraps an IRCProtocol object to allow for automatic reconnection. Only used
+    Wraps an LobbyProtocol object to allow for automatic reconnection. Only used
     internally.
     """
 
@@ -74,32 +77,29 @@ class LobbyProtocol(asyncio.Protocol):
     """
 
     def connection_made(self, transport):
+        print("Connection MADE")
+
         self.work = True
         self.transport = transport
         self.wrapper = None
-        self.logger = logging.getLogger("asyncspring.IRCProtocol")
+        self.logger = logging.getLogger("asyncspring.LobbyProtocol")
         self.last_ping = float('inf')
         self.last_pong = 0
         self.lag = 0
         self.buf = ""
-        self.username = ""
-        self.password = ""
-        self.nick = ""
+        self.old_nickname = None
         self.nickname = ""
-        self.user = ""
-        self.realname = ""
-        self.email = ""
-        self.mode = ""
         self.server_supports = collections.defaultdict(lambda *_: None)
         self.queue = []
         self.queue_timer = 1.5
         self.caps = set()
         self.registration_complete = False
-        self.channels_to_join = []
+        self.channels_to_join = ["#test"]
         self.autoreconnect = True
 
         signal("connected").send(self)
         print("Connection success.")
+
         self.process_queue()
 
     def data_received(self, data):
@@ -112,21 +112,23 @@ class LobbyProtocol(asyncio.Protocol):
             index = self.buf.index("\n")
             line_received = self.buf[:index].strip()
             self.buf = self.buf[index + 1:]
-            print(line_received)
+            # print(line_received)
             signal("raw").send(self, text=line_received)
 
     def connection_lost(self, exc):
-        if not self.work: return
+        if not self.work:
+            return
         self.logger.critical("Connection lost.")
         signal("connection-lost").send(self.wrapper)
 
-    ## Core helper functions
+    # Core helper functions
 
     def process_queue(self):
         """
         Pull data from the pending messages queue and send it. Schedule ourself
         to be executed again later.
         """
+
         if not self.work:
             return
         if self.queue:
@@ -134,9 +136,10 @@ class LobbyProtocol(asyncio.Protocol):
         loop.call_later(self.queue_timer, self.process_queue)
 
     def on(self, event):
+
         def process(f):
             """
-            Register an event with Blinker. Convienence function.
+            Register an event with Blinker. Convenience function.
             """
             print("Registering function for event {}".format(event))
             signal(event).connect(f)
@@ -186,7 +189,7 @@ class LobbyProtocol(asyncio.Protocol):
         signal("registration-complete").send(self)
         self.nickname = self.username
 
-    ## protocol abstractions
+    # protocol abstractions
 
     def login(self, username, password):
         """
@@ -202,21 +205,14 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-
         self.writeln(f"LOGIN {self.username} {self.password} 3200 * TurBoMatrix 0.1")
         signal("login-complete").send(self)
 
-        return self
-
-    def join(self, channel, key=None):
+    def join(self, channel):
         """
         Join a channel.
         """
-
-        if key:
-            self.writeln(f"JOIN {channel} {key}")
-        else:
-            self.writeln(f"JOIN {channel}")
+        self.writeln(f"JOIN {channel}")
 
         return self
 
@@ -283,7 +279,7 @@ class LobbyProtocol(asyncio.Protocol):
         s = "a{}".format("".join([random.choice("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(8)]))
         return s
 
-        ## catch-all
+        # catch-all
 
         # def __getattr__(self, attr):
         #     if attr in self.__dict__:
@@ -298,23 +294,26 @@ class LobbyProtocol(asyncio.Protocol):
 
 
 def get_user(hostmask):
+    print("HOSTMASK!!!!!!")
     print(hostmask)
     if "!" not in hostmask or "@" not in hostmask:
         return User(hostmask, hostmask, hostmask)
     return User.from_hostmask(hostmask)
 
 
-def connect(server, port=8200, use_ssl=False):
+async def connect(server, port=8200, use_ssl=False):
     """
     Connect to an SpringRTS Lobby server. Returns a proxy to an LobbyProtocol object.
     """
-    print("connect")
-    connector = loop.create_connection(LobbyProtocol, host=server, port=port, ssl=use_ssl)
-    transport, protocol = loop.run_until_complete(connector)
+
+    transport, protocol = await loop.create_connection(LobbyProtocol, host=server, port=port, ssl=use_ssl)
+
     protocol.wrapper = LobbyProtocolWrapper(protocol)
     protocol.server_info = {"host": server, "port": port, "ssl": use_ssl}
     protocol.netid = "{}:{}:{}{}".format(id(protocol), server, port, "+" if use_ssl else "-")
+
     signal("netid-available").send(protocol)
+
     connections[protocol.netid] = protocol.wrapper
 
     return protocol.wrapper
@@ -330,7 +329,6 @@ def disconnected(client_wrapper):
     print("Disconnected from {}. Attempting to reconnect...".format(client_wrapper.netid))
     signal("disconnected").send(client_wrapper.protocol)
     if not client_wrapper.protocol.autoreconnect:
-        import sys
         sys.exit(2)
 
     connector = loop.create_connection(LobbyProtocol, **client_wrapper.server_info)
@@ -341,8 +339,8 @@ def disconnected(client_wrapper):
         """
 
         print("Reconnected! {}".format(client_wrapper.netid))
-        _, protocol = f.result()
-        protocol.register(client_wrapper.user, client_wrapper.password)
+        transport, protocol = f.result()
+        protocol.login(client_wrapper.username, client_wrapper.password)
         protocol.channels_to_join = client_wrapper.channels_to_join
         protocol.server_info = client_wrapper.server_info
         protocol.netid = client_wrapper.netid
@@ -355,4 +353,4 @@ def disconnected(client_wrapper):
 
 signal("connection-lost").connect(disconnected)
 
-import plugins.core
+import asyncspring.plugins.core

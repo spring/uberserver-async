@@ -1,5 +1,5 @@
-from blinker import signal
-from parser import LobbyMessage
+from asyncblink import signal
+from asyncspring.parser import LobbyMessage
 from collections import defaultdict
 
 
@@ -123,7 +123,7 @@ def get_channel(netid_or_message, x):
     return registry.channels[x]
 
 
-## signal definitions
+# signal definitions
 
 join = signal("join")
 extjoin = signal("irc-join")
