@@ -51,7 +51,7 @@ class LobbyMessage:
         """
         Create a new LobbyMessage from an unparsed Lobby line.
         """
-        print(message)
+        # print(message)
 
         if isinstance(message, bytes):
             message = message.decode('UTF-8', 'replace')
