@@ -1,6 +1,6 @@
 from asyncblink import signal
-from asyncspring.spring import get_user
-from asyncspring.parser import LobbyMessage
+from spring import get_user
+from parser import LobbyMessage
 
 import asyncio
 import time
@@ -9,7 +9,7 @@ ping_clients = []
 
 
 def _pong(message):
-    message.client.writeln(f"PONG {message.params[0]}")
+    message.client.writeln("PONG")
 
 
 def _redispatch_message_common(message, mtype):

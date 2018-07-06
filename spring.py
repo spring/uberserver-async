@@ -294,8 +294,6 @@ class LobbyProtocol(asyncio.Protocol):
 
 
 def get_user(hostmask):
-    print("HOSTMASK!!!!!!")
-    print(hostmask)
     if "!" not in hostmask or "@" not in hostmask:
         return User(hostmask, hostmask, hostmask)
     return User.from_hostmask(hostmask)
@@ -353,4 +351,4 @@ def disconnected(client_wrapper):
 
 signal("connection-lost").connect(disconnected)
 
-import asyncspring.plugins.core
+import plugins.core

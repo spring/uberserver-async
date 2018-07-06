@@ -1,0 +1,5 @@
+lobby:
+  host: "lobby.springrts.com"
+  port: 8200
+  user: "Tole"
+  passwd: "PWD"
