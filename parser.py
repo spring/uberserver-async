@@ -51,7 +51,8 @@ class LobbyMessage:
         """
         Create a new LobbyMessage from an unparsed Lobby line.
         """
-        # print(message)
+
+        # print("RECEIVED:\t{}".format(message))
 
         if isinstance(message, bytes):
             message = message.decode('UTF-8', 'replace')
@@ -89,4 +90,4 @@ class LobbyMessage:
         return cls.from_data(verb, params, source, tags)
 
     def __str__(self):
-        return f"LobbyMessage: verb={self.verb}, params={self.params}, source={self.source}"
+        return "LobbyMessage: verb={}, params={}, source={}".format(self.verb, self.params, self.source)

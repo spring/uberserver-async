@@ -15,6 +15,8 @@ connections = {}
 
 plugins = []
 
+log = logging.getLogger(__name__)
+
 
 def plugin_registered_handler(plugin_name):
     plugins.append(plugin_name)
@@ -77,7 +79,6 @@ class LobbyProtocol(asyncio.Protocol):
     """
 
     def connection_made(self, transport):
-        print("Connection MADE")
 
         self.work = True
         self.transport = transport
@@ -94,11 +95,11 @@ class LobbyProtocol(asyncio.Protocol):
         self.queue_timer = 1.5
         self.caps = set()
         self.registration_complete = False
-        self.channels_to_join = ["#test"]
+        self.channels_to_join = []
         self.autoreconnect = True
 
         signal("connected").send(self)
-        print("Connection success.")
+        self.logger.info("Connection success.")
 
         self.process_queue()
 
@@ -133,6 +134,7 @@ class LobbyProtocol(asyncio.Protocol):
             return
         if self.queue:
             self._writeln(self.queue.pop(0))
+
         loop.call_later(self.queue_timer, self.process_queue)
 
     def on(self, event):
@@ -141,7 +143,7 @@ class LobbyProtocol(asyncio.Protocol):
             """
             Register an event with Blinker. Convenience function.
             """
-            print("Registering function for event {}".format(event))
+            self.logger.info("Registering function for event {}".format(event))
             signal(event).connect(f)
             return f
 
@@ -153,9 +155,9 @@ class LobbyProtocol(asyncio.Protocol):
         """
         if not isinstance(line, bytes):
             line = line.encode("utf-8")
-        print(line)
+        # print("SENT:\t\t{}".format(line))
         self.transport.write(line + b"\r\n")
-        signal("irc-send").send(line.decode())
+        signal("lobby-send").send(line.decode())
 
     def writeln(self, line):
         """
@@ -181,11 +183,11 @@ class LobbyProtocol(asyncio.Protocol):
         Send registration messages to SpringLobby Server.
         """
         if self.email:
-            self.writeln(f"REGISTER {self.username} {self.password} {self.email}")
+            self.writeln("REGISTER {} {} {}".format(self.username, self.password, self.email))
         else:
-            self.writeln(f"REGISTER {self.username} {self.password}")
+            self.writeln("REGISTER {} {}".format(self.username, self.password))
 
-        print("Sent registration information")
+        self.logger.info("Sent registration information")
         signal("registration-complete").send(self)
         self.nickname = self.username
 
@@ -205,14 +207,14 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-        self.writeln(f"LOGIN {self.username} {self.password} 3200 * TurBoMatrix 0.1")
+        self.writeln("LOGIN {} {} 3200 * TurBoMatrix 0.1".format(self.username, self.password))
         signal("login-complete").send(self)
 
     def join(self, channel):
         """
         Join a channel.
         """
-        self.writeln(f"JOIN {channel}")
+        self.writeln("JOIN {}".format(channel))
 
         return self
 
@@ -221,7 +223,7 @@ class LobbyProtocol(asyncio.Protocol):
         Leave a channel.
         """
 
-        self.writeln(f"LEAVE {channel}")
+        self.writeln("LEAVE {}".format(channel))
 
     def say(self, channel, message):
         """
@@ -232,7 +234,7 @@ class LobbyProtocol(asyncio.Protocol):
         message = message.replace("\n", "").replace("\r", "")
 
         while message:
-            self.writeln(f"SAY {channel} :{message[:400]}")
+            self.writeln("SAY {} {}".format(channel, message[:400]))
             message = message[400:]
 
     def say_ex(self, channel, message):
@@ -244,7 +246,7 @@ class LobbyProtocol(asyncio.Protocol):
         message = message.replace("\n", "").replace("\r", "")
 
         while message:
-            self.writeln(f"SAYEX {channel} :{message[:400]}")
+            self.writeln("SAYEX {} {}".format(channel, message[:400]))
             message = message[400:]
 
     def say_private(self, username, message):
@@ -256,7 +258,7 @@ class LobbyProtocol(asyncio.Protocol):
         message = message.replace("\n", "").replace("\r", "")
 
         while message:
-            self.writeln(f"SAYPRIVATE {username} :{message[:400]}")
+            self.writeln("SAYPRIVATE {} :{}".format(username, message[:400]))
             message = message[400:]
 
     def say_private_ex(self, username, message):
@@ -268,7 +270,7 @@ class LobbyProtocol(asyncio.Protocol):
         message = message.replace("\n", "").replace("\r", "")
 
         while message:
-            self.writeln(f"SAYPRIVATEEX {username} :{message[:400]}")
+            self.writeln("SAYPRIVATEEX {} :{}".format(username, message[:400]))
             message = message[400:]
 
     def nick_in_use_handler(self):
@@ -324,7 +326,7 @@ def disconnected(client_wrapper):
     """
 
     client_wrapper.protocol.work = False
-    print("Disconnected from {}. Attempting to reconnect...".format(client_wrapper.netid))
+    log.info("Disconnected from {}. Attempting to reconnect...".format(client_wrapper.netid))
     signal("disconnected").send(client_wrapper.protocol)
     if not client_wrapper.protocol.autoreconnect:
         sys.exit(2)
@@ -336,7 +338,7 @@ def disconnected(client_wrapper):
         Callback function for a successful reconnection.
         """
 
-        print("Reconnected! {}".format(client_wrapper.netid))
+        log.info("Reconnected! {}".format(client_wrapper.netid))
         transport, protocol = f.result()
         protocol.login(client_wrapper.username, client_wrapper.password)
         protocol.channels_to_join = client_wrapper.channels_to_join
@@ -351,4 +353,4 @@ def disconnected(client_wrapper):
 
 signal("connection-lost").connect(disconnected)
 
-import plugins.core
+import asyncspring.plugins.core

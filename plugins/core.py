@@ -1,27 +1,25 @@
 from asyncblink import signal
-from spring import get_user
-from parser import LobbyMessage
+from asyncspring.spring import get_user
+from asyncspring.parser import LobbyMessage
 
 import asyncio
 import time
+import logging
+
+log = logging.getLogger(__name__)
 
 ping_clients = []
 
 
 def _pong(message):
-    message.client.writeln("PONG")
+    message.client.writeln("PONG {}".format(message.params[0]))
 
 
 def _redispatch_message_common(message, mtype):
-    target, text = message.params[0], message.params[1]
-    user = get_user(message.source) if message.source else ''
+    user = message.source
+    target, text = message.params[0], " ".join(message.params[2:])
     signal(mtype).send(message, user=user, target=target, text=text)
-    """
-    if target == message.client.nickname:
-        signal("private-{}".format(mtype)).send(message, user=user, target=target, text=text)
-    else:
-        signal("public-{}".format(mtype)).send(message, user=user, target=target, text=text)
-    """
+
 
 def _redispatch_said(message):
     _redispatch_message_common(message, "said")
@@ -32,11 +30,11 @@ def _redispatch_saidex(message):
 
 
 def _redispatch_saidprivate(message):
-    _redispatch_message_common(message, "said")
+    _redispatch_message_common(message, "said-private")
 
 
 def _redispatch_saidprivateex(message):
-    _redispatch_message_common(message, "saidex")
+    _redispatch_message_common(message, "saidex-private")
 
 
 def _redispatch_notice(message):
@@ -80,7 +78,7 @@ def _parse_mode(message):
         argument_modes += message.client.server_supports["PREFIX"].split(")")[0][1:]
     else:
         argument_modes = "beIqaohvlk"
-    print("argument_modes are", argument_modes)
+    log.info("argument_modes are", argument_modes)
     user = get_user(message.source)
     channel = message.params[0]
     modes = message.params[1]
@@ -100,7 +98,7 @@ def _parse_mode(message):
 
 def _server_supports(message):
     supports = message.params[1:-1]  # No need for "Are supported by this server" or bot's nickname
-    print("Server supports {}".format(supports))
+    log.info("Server supports {}".format(supports))
     for feature in supports:
         if "=" in feature:
             k, v = feature.split("=")
@@ -135,7 +133,7 @@ def _catch_pong(message):
 
 
 def _redispatch_spring(message):
-    signal(f"spring-{message.verb.lower()}").send(message)
+    signal("spring-{}".format(message.verb.lower())).send(message)
 
 
 def _redispatch_raw(client, text):
@@ -145,12 +143,12 @@ def _redispatch_raw(client, text):
 
 
 def _register_client(client):
-    print("Sending real registration message")
+    log.info("Sending real registration message")
     asyncio.get_event_loop().call_later(1, client._register)
 
 
 def _login_client(client):
-    print("Server login")
+    log.info("Server login")
     asyncio.get_event_loop().call_later(1, client._login)
 
 
@@ -165,14 +163,21 @@ def _connection_registered(message):
     for channel in message.client.channels_to_join:
         message.client.join(channel)
 
-
 def _connection_denied(message):
     message.client.registration_complete = False
-    print("LOGGIN DENIED BY SERVER")
+    log.info("LOGGIN DENIED BY SERVER")
 
 
 def _parse_motd(message):
-    print(message.params)
+    pass
+
+
+def _matrix_clients(message):
+    pass
+
+
+def _matrix_channeltopic(message):
+    pass
 
 
 signal("raw").connect(_redispatch_raw)
@@ -201,13 +206,11 @@ signal("spring-denied").connect(_connection_denied)
 
 signal("spring-motd").connect(_parse_motd)
 
-"""
-signal("spring-adduser").connect(_matrix_adduser)
-signal("spring-removeuser").connect(_matrix_removeuser)
+# signal("spring-adduser").connect(_matrix_adduser)
+# signal("spring-removeuser").connect(_matrix_removeuser)
 
-signal("spring-left").connect(_matrix_left)
-signal("spring-joined").connect(_matrix_joined)
+# signal("spring-left").connect(_matrix_left)
+# signal("spring-joined").connect(_matrix_joined)
 
 signal("spring-clients").connect(_matrix_clients)
 signal("spring-channeltopic").connect(_matrix_channeltopic)
-"""
