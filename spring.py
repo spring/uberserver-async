@@ -207,7 +207,7 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-        self.writeln("LOGIN {} {} 3200 * TurBoMatrix 0.1".format(self.username, self.password))
+        self.writeln("LOGIN {} {} 3200 * AsyncSpring 0.1".format(self.username, self.password))
         signal("login-complete").send(self)
 
     def join(self, channel):
@@ -353,4 +353,4 @@ def disconnected(client_wrapper):
 
 signal("connection-lost").connect(disconnected)
 
-import asyncspring.plugins.core
+import plugins.core

@@ -1,6 +1,6 @@
 from asyncblink import signal
-from asyncspring.spring import get_user
-from asyncspring.parser import LobbyMessage
+from spring import get_user
+from parser import LobbyMessage
 
 import asyncio
 import time
@@ -139,6 +139,7 @@ def _redispatch_spring(message):
 def _redispatch_raw(client, text):
     message = LobbyMessage.from_message(text)
     message.client = client
+    print(message)
     signal("spring").send(message)
 
 
