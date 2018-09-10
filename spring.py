@@ -7,6 +7,11 @@ import logging
 import random
 import ssl
 
+from hashlib import md5
+from base64 import b64encode as ENCODE_FUNC
+
+
+
 from asyncblink import signal
 
 loop = asyncio.get_event_loop()
@@ -17,6 +22,9 @@ plugins = []
 
 log = logging.getLogger(__name__)
 
+
+def EncodePassword(password):
+    return ENCODE_FUNC(md5(password.encode()).digest()).decode()
 
 def plugin_registered_handler(plugin_name):
     plugins.append(plugin_name)
@@ -199,7 +207,7 @@ class LobbyProtocol(asyncio.Protocol):
         ident, realname, and password (if required by the server).
         """
         self.username = username
-        self.password = password
+        self.password = EncodePassword(password)
 
         return self
 
@@ -353,4 +361,4 @@ def disconnected(client_wrapper):
 
 signal("connection-lost").connect(disconnected)
 
-import plugins.core
+import asyncspring.plugins.core

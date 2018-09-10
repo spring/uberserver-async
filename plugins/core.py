@@ -1,6 +1,6 @@
 from asyncblink import signal
-from spring import get_user
-from parser import LobbyMessage
+from asyncspring.spring import get_user
+from asyncspring.parser import LobbyMessage
 
 import asyncio
 import time
