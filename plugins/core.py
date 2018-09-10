@@ -41,8 +41,14 @@ def _redispatch_notice(message):
     _redispatch_message_common(message, "notice")
 
 
-def _redispatch_joined(message):
+def _redispatch_join(message):
+    print("SIGNAL JOIN")
     signal("join").send(message, user=get_user(message.source), channel=message.params[0])
+
+
+def _redispatch_joined(message):
+    print("SIGNAL JOINED")
+    signal("joined").send(message, user=get_user(message.source), channel=message.params[0])
 
 
 def _redispatch_left(message):
@@ -164,6 +170,7 @@ def _connection_registered(message):
     for channel in message.client.channels_to_join:
         message.client.join(channel)
 
+
 def _connection_denied(message):
     message.client.registration_complete = False
     log.info("LOGGIN DENIED BY SERVER")
@@ -195,6 +202,7 @@ signal("spring-saidprivate").connect(_redispatch_saidprivate)
 signal("spring-saidprivateex").connect(_redispatch_saidprivateex)
 
 signal("spring-notice").connect(_redispatch_notice)
+signal("spring-join").connect(_redispatch_join)
 signal("spring-joined").connect(_redispatch_joined)
 signal("spring-left").connect(_redispatch_left)
 signal("spring-quit").connect(_redispatch_quit)
@@ -209,9 +217,6 @@ signal("spring-motd").connect(_parse_motd)
 
 # signal("spring-adduser").connect(_matrix_adduser)
 # signal("spring-removeuser").connect(_matrix_removeuser)
-
-# signal("spring-left").connect(_matrix_left)
-# signal("spring-joined").connect(_matrix_joined)
 
 signal("spring-clients").connect(_matrix_clients)
 signal("spring-channeltopic").connect(_matrix_channeltopic)
