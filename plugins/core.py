@@ -41,13 +41,7 @@ def _redispatch_notice(message):
     _redispatch_message_common(message, "notice")
 
 
-def _redispatch_join(message):
-    print("SIGNAL JOIN")
-    signal("join").send(message, user=get_user(message.source), channel=message.params[0])
-
-
 def _redispatch_joined(message):
-    print("SIGNAL JOINED")
     signal("joined").send(message, user=get_user(message.source), channel=message.params[0])
 
 
@@ -56,7 +50,7 @@ def _redispatch_left(message):
     channel, reason = message.params[0], None
     if len(message.params) > 1:
         reason = message.params[1]
-    signal("part").send(message, user=user, channel=channel, reason=reason)
+    signal("left").send(message, user=user, channel=channel, reason=reason)
 
 
 def _redispatch_quit(message):
@@ -145,7 +139,6 @@ def _redispatch_spring(message):
 def _redispatch_raw(client, text):
     message = LobbyMessage.from_message(text)
     message.client = client
-    print(message)
     signal("spring").send(message)
 
 
@@ -180,12 +173,8 @@ def _parse_motd(message):
     pass
 
 
-def _matrix_clients(message):
-    pass
-
-
-def _matrix_channeltopic(message):
-    pass
+def _redispatch_clients(message):
+    signal("clients").send(message)
 
 
 signal("raw").connect(_redispatch_raw)
@@ -202,7 +191,6 @@ signal("spring-saidprivate").connect(_redispatch_saidprivate)
 signal("spring-saidprivateex").connect(_redispatch_saidprivateex)
 
 signal("spring-notice").connect(_redispatch_notice)
-signal("spring-join").connect(_redispatch_join)
 signal("spring-joined").connect(_redispatch_joined)
 signal("spring-left").connect(_redispatch_left)
 signal("spring-quit").connect(_redispatch_quit)
@@ -214,9 +202,4 @@ signal("spring-accepted").connect(_connection_registered)
 signal("spring-denied").connect(_connection_denied)
 
 signal("spring-motd").connect(_parse_motd)
-
-# signal("spring-adduser").connect(_matrix_adduser)
-# signal("spring-removeuser").connect(_matrix_removeuser)
-
-signal("spring-clients").connect(_matrix_clients)
-signal("spring-channeltopic").connect(_matrix_channeltopic)
+signal("spring-clients").connect(_redispatch_clients)
