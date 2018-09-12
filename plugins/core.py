@@ -42,11 +42,11 @@ def _redispatch_notice(message):
 
 
 def _redispatch_joined(message):
-    signal("joined").send(message, user=get_user(message.source), channel=message.params[0])
+    signal("joined").send(message, user=get_user(message.params[1]), channel=message.params[0])
 
 
 def _redispatch_left(message):
-    user = get_user(message.source)
+    user = get_user(message.params[1])
     channel, reason = message.params[0], None
     if len(message.params) > 1:
         reason = message.params[1]
