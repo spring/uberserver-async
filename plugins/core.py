@@ -130,6 +130,7 @@ def _ping_servers():
 def _catch_pong(message):
     message.client.last_pong = time.time()
     message.client.lag = message.client.last_pong - message.client.last_ping
+    signal("pong").send(message)
 
 
 def _redispatch_spring(message):
@@ -139,6 +140,7 @@ def _redispatch_spring(message):
 def _redispatch_raw(client, text):
     message = LobbyMessage.from_message(text)
     message.client = client
+    # log.debug(message)
     signal("spring").send(message)
 
 
@@ -166,7 +168,7 @@ def _connection_registered(message):
 
 def _connection_denied(message):
     message.client.registration_complete = False
-    log.info("LOGGIN DENIED BY SERVER")
+    signal("denied").send(message)
 
 
 def _parse_motd(message):
@@ -175,6 +177,14 @@ def _parse_motd(message):
 
 def _redispatch_clients(message):
     signal("clients").send(message)
+
+
+def _redispatch_adduser(message):
+    signal("adduser").send(message)
+
+
+def _redispatch_removeuser(message):
+    signal("removeuser").send(message)
 
 
 signal("raw").connect(_redispatch_raw)
@@ -193,6 +203,8 @@ signal("spring-saidprivateex").connect(_redispatch_saidprivateex)
 signal("spring-notice").connect(_redispatch_notice)
 signal("spring-joined").connect(_redispatch_joined)
 signal("spring-left").connect(_redispatch_left)
+signal("spring-adduser").connect(_redispatch_adduser)
+signal("spring-removeuser").connect(_redispatch_removeuser)
 signal("spring-quit").connect(_redispatch_quit)
 signal("spring-kick").connect(_redispatch_kick)
 signal("spring-nick").connect(_redispatch_nick)

@@ -11,7 +11,6 @@ from hashlib import md5
 from base64 import b64encode as ENCODE_FUNC
 
 
-
 from asyncblink import signal
 
 loop = asyncio.get_event_loop()
@@ -25,6 +24,7 @@ log = logging.getLogger(__name__)
 
 def EncodePassword(password):
     return ENCODE_FUNC(md5(password.encode()).digest()).decode()
+
 
 def plugin_registered_handler(plugin_name):
     plugins.append(plugin_name)
@@ -85,9 +85,10 @@ class LobbyProtocol(asyncio.Protocol):
     """
     Represents a connection to SpringRTS Lobby.
     """
+    def __init__(self, name):
+        self.name = name
 
     def connection_made(self, transport):
-
         self.work = True
         self.transport = transport
         self.wrapper = None
@@ -121,7 +122,7 @@ class LobbyProtocol(asyncio.Protocol):
             index = self.buf.index("\n")
             line_received = self.buf[:index].strip()
             self.buf = self.buf[index + 1:]
-            # print(line_received)
+            # log.debug(line_received)
             signal("raw").send(self, text=line_received)
 
     def connection_lost(self, exc):
@@ -179,6 +180,8 @@ class LobbyProtocol(asyncio.Protocol):
         Queue registration with the server. This includes sending nickname,
         ident, realname, and password (if required by the server).
         """
+
+        log.debug("REGISTER")
 
         self.username = username
         self.password = password
@@ -309,12 +312,13 @@ def get_user(hostmask):
     return User.from_hostmask(hostmask)
 
 
-async def connect(server, port=8200, use_ssl=False):
+async def connect(server, port=8200, use_ssl=False, name=None):
     """
     Connect to an SpringRTS Lobby server. Returns a proxy to an LobbyProtocol object.
     """
 
-    transport, protocol = await loop.create_connection(LobbyProtocol, host=server, port=port, ssl=use_ssl)
+    transport, protocol = await loop.create_connection(lambda: LobbyProtocol(name),
+                                                       host=server, port=port, ssl=use_ssl)
 
     protocol.wrapper = LobbyProtocolWrapper(protocol)
     protocol.server_info = {"host": server, "port": port, "ssl": use_ssl}
@@ -361,4 +365,4 @@ def disconnected(client_wrapper):
 
 signal("connection-lost").connect(disconnected)
 
-import asyncspring.plugins.core
+from asyncspring.plugins.core import *
