@@ -8,7 +8,7 @@ import random
 import ssl
 
 from hashlib import md5
-from base64 import b64encode as ENCODE_FUNC
+from base64 import b64encode
 
 
 from asyncblink import signal
@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 
 def EncodePassword(password):
-    return ENCODE_FUNC(md5(password.encode()).digest()).decode()
+    return b64encode(md5(password.encode('utf-8')).digest()).decode()
 
 
 def plugin_registered_handler(plugin_name):
@@ -164,7 +164,9 @@ class LobbyProtocol(asyncio.Protocol):
         """
         if not isinstance(line, bytes):
             line = line.encode("utf-8")
-        # print("SENT:\t\t{}".format(line))
+
+        print(line)
+
         self.transport.write(line + b"\r\n")
         signal("lobby-send").send(line.decode())
 
@@ -181,18 +183,10 @@ class LobbyProtocol(asyncio.Protocol):
         ident, realname, and password (if required by the server).
         """
 
-        log.debug("REGISTER")
-
         self.username = username
-        self.password = password
+        self.password = EncodePassword(password)
         self.email = email
 
-        return self
-
-    def _register(self):
-        """
-        Send registration messages to SpringLobby Server.
-        """
         if self.email:
             self.writeln("REGISTER {} {} {}".format(self.username, self.password, self.email))
         else:
@@ -201,6 +195,9 @@ class LobbyProtocol(asyncio.Protocol):
         self.logger.info("Sent registration information")
         signal("registration-complete").send(self)
         self.nickname = self.username
+
+    def accept(self):
+        self.writeln("CONFIRMAGREEMENT")
 
     # protocol abstractions
 

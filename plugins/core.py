@@ -172,7 +172,7 @@ def _connection_denied(message):
 
 
 def _parse_motd(message):
-    pass
+    log.info(message)
 
 
 def _redispatch_clients(message):
@@ -185,6 +185,10 @@ def _redispatch_adduser(message):
 
 def _redispatch_removeuser(message):
     signal("removeuser").send(message)
+
+
+def _redispatch_agreement(message):
+    signal("agreement_end").send(message)
 
 
 signal("raw").connect(_redispatch_raw)
@@ -212,6 +216,7 @@ signal("spring-mode").connect(_parse_mode)
 signal("spring-005").connect(_server_supports)
 signal("spring-accepted").connect(_connection_registered)
 signal("spring-denied").connect(_connection_denied)
+signal("spring-agreementend").connect(_redispatch_agreement)
 
 signal("spring-motd").connect(_parse_motd)
 signal("spring-clients").connect(_redispatch_clients)
