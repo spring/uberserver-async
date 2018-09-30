@@ -165,7 +165,7 @@ class LobbyProtocol(asyncio.Protocol):
         if not isinstance(line, bytes):
             line = line.encode("utf-8")
 
-        print(line)
+        # print(line)
 
         self.transport.write(line + b"\r\n")
         signal("lobby-send").send(line.decode())
