@@ -218,6 +218,36 @@ class LobbyProtocol(asyncio.Protocol):
         self.writeln("LOGIN {} {} 3200 * AsyncSpring 0.1".format(self.username, self.password))
         signal("login-complete").send(self)
 
+    def bridged_client_from(self):
+        """
+        Initialized the bridge
+        """
+        self.writeln("BRIDGECLIENTFROM")
+
+    def un_bridged_client_from(self):
+        """
+        Deinitialized the bridge
+        """
+        self.writeln("UNBRIDGECLIENTFROM")
+
+    def join_from(self):
+        """
+        Join from remote server.
+        """
+        self.writeln("JOINFROM")
+
+    def leave_from(self):
+        """
+        Leave from remote server.
+        """
+        self.writeln("LEAVEFROM")
+
+    def say_from(self):
+        """
+        Say from remote server.
+        """
+        self.writeln("SAYFROM")
+
     def join(self, channel):
         """
         Join a channel.
