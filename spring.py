@@ -215,14 +215,16 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-        self.writeln("LOGIN {} {} 3200 * AsyncSpring 0.1".format(self.username, self.password))
+        self.writeln("LOGIN {} {} 3200 * AsyncSpring 0.1\t0\tu".format(self.username, self.password))
+        print("LOGIN {} {} 3200 * AsyncSpring 0.1\t0\tu".format(self.username, self.password))
         signal("login-complete").send(self)
 
-    def bridged_client_from(self):
+    def bridged_client_from(self, location, external_id, external_isername):
         """
         Initialized the bridge
         """
-        self.writeln("BRIDGECLIENTFROM")
+        self.writeln("BRIDGECLIENTFROM {} {} {}".format(location, external_id, external_isername))
+        print("BRIDGECLIENTFROM {} {} {}".format(location, external_id, external_isername))
 
     def un_bridged_client_from(self):
         """
@@ -230,11 +232,12 @@ class LobbyProtocol(asyncio.Protocol):
         """
         self.writeln("UNBRIDGECLIENTFROM")
 
-    def join_from(self):
+    def join_from(self, channel, location, external_id):
         """
         Join from remote server.
         """
-        self.writeln("JOINFROM")
+        self.writeln("JOINFROM {} {} {}".format(channel, location, external_id))
+        print("JOINFROM {} {} {}".format(channel, location, external_id))
 
     def leave_from(self):
         """
@@ -242,11 +245,16 @@ class LobbyProtocol(asyncio.Protocol):
         """
         self.writeln("LEAVEFROM")
 
-    def say_from(self):
+    def say_from(self, user, domain, channel, body):
         """
         Say from remote server.
         """
-        self.writeln("SAYFROM")
+        message = body.replace("\n", " ").replace("\r", " ")
+
+        while message:
+            self.writeln("SAYFROM {} {} {} {}".format(channel, domain, user, message[:200]))
+            print(("SAYFROM {} {} {} {}".format(channel, domain, "test", message[:200])))
+            message = message[400:]
 
     def join(self, channel):
         """
@@ -269,7 +277,7 @@ class LobbyProtocol(asyncio.Protocol):
         Carriage returns and line feeds are stripped to prevent bugs.
         """
 
-        message = message.replace("\n", "").replace("\r", "")
+        message = message.replace("\n", " ").replace("\r", " ")
 
         while message:
             self.writeln("SAY {} {}".format(channel, message[:400]))

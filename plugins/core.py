@@ -160,6 +160,7 @@ def _queue_ping(client):
 
 
 def _connection_registered(message):
+
     message.client.registration_complete = True
     _queue_ping(message.client)
     for channel in message.client.channels_to_join:
@@ -172,7 +173,8 @@ def _connection_denied(message):
 
 
 def _parse_motd(message):
-    log.info(message)
+    pass
+    # log.info(message)
 
 
 def _redispatch_clients(message):
