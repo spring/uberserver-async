@@ -216,7 +216,6 @@ class LobbyProtocol(asyncio.Protocol):
         Send Login message to SpringLobby Server.
         """
         self.writeln("LOGIN {} {} 3200 * AsyncSpring 0.1\t0\tu".format(self.username, self.password))
-        print("LOGIN {} {} 3200 * AsyncSpring 0.1\t0\tu".format(self.username, self.password))
         signal("login-complete").send(self)
 
     def bridged_client_from(self, location, external_id, external_isername):
@@ -224,7 +223,6 @@ class LobbyProtocol(asyncio.Protocol):
         Initialized the bridge
         """
         self.writeln("BRIDGECLIENTFROM {} {} {}".format(location, external_id, external_isername))
-        print("BRIDGECLIENTFROM {} {} {}".format(location, external_id, external_isername))
 
     def un_bridged_client_from(self):
         """
@@ -237,7 +235,6 @@ class LobbyProtocol(asyncio.Protocol):
         Join from remote server.
         """
         self.writeln("JOINFROM {} {} {}".format(channel, location, external_id))
-        print("JOINFROM {} {} {}".format(channel, location, external_id))
 
     def leave_from(self):
         """
@@ -253,7 +250,6 @@ class LobbyProtocol(asyncio.Protocol):
 
         while message:
             self.writeln("SAYFROM {} {} {} {}".format(channel, domain, user, message[:200]))
-            print(("SAYFROM {} {} {} {}".format(channel, domain, "test", message[:200])))
             message = message[400:]
 
     def join(self, channel):

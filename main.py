@@ -1,4 +1,4 @@
-from spring import connect
+from .spring import connect
 
 import asyncio
 import yaml
@@ -10,7 +10,7 @@ loop = asyncio.get_event_loop()
 loop.set_debug(True)
 
 
-def EncodePassword(password):
+def encode_password(password):
     return ENCODE_FUNC(md5(password.encode()).digest()).decode()
 
 async def init_bot():
@@ -21,7 +21,7 @@ async def init_bot():
     lobby_host = cfg["lobby"]["host"]
     lobby_port = cfg["lobby"]["port"]
     lobby_user = cfg["lobby"]["user"]
-    lobby_pass = EncodePassword(cfg["lobby"]["pass"])
+    lobby_pass = encode_password(cfg["lobby"]["pass"])
     enable_ssl = cfg["lobby"]["ssl"]
 
     if enable_ssl:
