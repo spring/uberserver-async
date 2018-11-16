@@ -10,7 +10,6 @@ import ssl
 from hashlib import md5
 from base64 import b64encode
 
-
 from asyncblink import signal
 
 loop = asyncio.get_event_loop()
@@ -85,6 +84,7 @@ class LobbyProtocol(asyncio.Protocol):
     """
     Represents a connection to SpringRTS Lobby.
     """
+
     def __init__(self, name):
         self.name = name
 
@@ -98,7 +98,8 @@ class LobbyProtocol(asyncio.Protocol):
         self.lag = 0
         self.buf = ""
         self.old_nickname = None
-        self.nickname = ""
+        self.username = ""
+        self.password = ""
         self.server_supports = collections.defaultdict(lambda *_: None)
         self.queue = []
         self.queue_timer = 1.5
@@ -184,13 +185,13 @@ class LobbyProtocol(asyncio.Protocol):
         """
 
         self.username = username
-        self.password = EncodePassword(password)
+        self.password = password
         self.email = email
 
         if self.email:
-            self.writeln("REGISTER {} {} {}".format(self.username, self.password, self.email))
+            self.writeln("REGISTER {} {} {}".format(self.username, EncodePassword(self.password), self.email))
         else:
-            self.writeln("REGISTER {} {}".format(self.username, self.password))
+            self.writeln("REGISTER {} {}".format(self.username, EncodePassword(self.password)))
 
         self.logger.info("Sent registration information")
         signal("registration-complete").send(self)
@@ -207,7 +208,7 @@ class LobbyProtocol(asyncio.Protocol):
         ident, realname, and password (if required by the server).
         """
         self.username = username
-        self.password = EncodePassword(password)
+        self.password = password
 
         return self
 
@@ -215,7 +216,7 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-        self.writeln("LOGIN {} {} 3200 * AsyncSpring 0.1\t0\tu".format(self.username, self.password))
+        self.writeln("LOGIN {} {} 3200 * AsyncSpring 0.1\t0\tu".format(self.username, EncodePassword(self.password)))
         signal("login-complete").send(self)
 
     def bridged_client_from(self, location, external_id, external_isername):
@@ -368,28 +369,34 @@ def disconnected(client_wrapper):
     configuration. Called by LobbyProtocol when we lose the connection.
     """
 
+    name = client_wrapper.name
+
     client_wrapper.protocol.work = False
-    log.info("Disconnected from {}. Attempting to reconnect...".format(client_wrapper.netid))
+    client_wrapper.logger.info("Disconnected from {}. Attempting to reconnect...".format(client_wrapper.netid))
     signal("disconnected").send(client_wrapper.protocol)
     if not client_wrapper.protocol.autoreconnect:
         sys.exit(2)
 
-    connector = loop.create_connection(LobbyProtocol, **client_wrapper.server_info)
+    connector = loop.create_connection(lambda: LobbyProtocol(name),
+                                       **client_wrapper.server_info)
 
     def reconnected(f):
         """
-        Callback function for a successful reconnection.
+        Callback function for reconnection.
         """
-
-        log.info("Reconnected! {}".format(client_wrapper.netid))
-        transport, protocol = f.result()
-        protocol.login(client_wrapper.username, client_wrapper.password)
-        protocol.channels_to_join = client_wrapper.channels_to_join
-        protocol.server_info = client_wrapper.server_info
-        protocol.netid = client_wrapper.netid
-        protocol.wrapper = client_wrapper
-        signal("netid-available").send(protocol)
-        client_wrapper.protocol = protocol
+        if f.exception():
+            time.sleep(5)
+            signal("connection-lost").send(client_wrapper)
+        else:
+            client_wrapper.logger.info("Reconnected! {}".format(client_wrapper.netid))
+            _, protocol = f.result()
+            protocol.channels_to_join = client_wrapper.channels_to_join
+            protocol.login(client_wrapper.username, client_wrapper.password)
+            protocol.server_info = client_wrapper.server_info
+            protocol.netid = client_wrapper.netid
+            protocol.wrapper = client_wrapper
+            signal("netid-available").send(protocol)
+            client_wrapper.protocol = protocol
 
     asyncio.async(connector).add_done_callback(reconnected)
 
