@@ -123,7 +123,7 @@ class LobbyProtocol(asyncio.Protocol):
             index = self.buf.index("\n")
             line_received = self.buf[:index].strip()
             self.buf = self.buf[index + 1:]
-            # log.debug(line_received)
+            log.debug(line_received)
             signal("raw").send(self, text=line_received)
 
     def connection_lost(self, exc):
@@ -175,6 +175,8 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Queue a message for sending to the currently connected SpringRTS Lobby server.
         """
+
+        log.debug(line)
         self.queue.append(line)
         return self
 
@@ -219,17 +221,17 @@ class LobbyProtocol(asyncio.Protocol):
         self.writeln("LOGIN {} {} 3200 * AsyncSpring 0.1\t0\tu".format(self.username, EncodePassword(self.password)))
         signal("login-complete").send(self)
 
-    def bridged_client_from(self, location, external_id, external_isername):
+    def bridged_client_from(self, location, external_id, external_username):
         """
         Initialized the bridge
         """
-        self.writeln("BRIDGECLIENTFROM {} {} {}".format(location, external_id, external_isername))
+        self.writeln("BRIDGECLIENTFROM {} {} {}".format(location, external_id, external_username))
 
-    def un_bridged_client_from(self):
+    def un_bridged_client_from(self, location, external_id):
         """
         Deinitialized the bridge
         """
-        self.writeln("UNBRIDGECLIENTFROM")
+        self.writeln("UNBRIDGECLIENTFROM {} {}".format(location, external_id))
 
     def join_from(self, channel, location, external_id):
         """
@@ -237,11 +239,11 @@ class LobbyProtocol(asyncio.Protocol):
         """
         self.writeln("JOINFROM {} {} {}".format(channel, location, external_id))
 
-    def leave_from(self):
+    def leave_from(self, channel, location, external_id):
         """
         Leave from remote server.
         """
-        self.writeln("LEAVEFROM")
+        self.writeln("LEAVEFROM {} {} {}".format(channel, location, external_id))
 
     def say_from(self, user, domain, channel, body):
         """

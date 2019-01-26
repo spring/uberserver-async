@@ -17,6 +17,10 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 """
 
+import logging
+
+log = logging.getLogger(__name__)
+
 
 class LobbyMessage:
     """
@@ -52,7 +56,7 @@ class LobbyMessage:
         Create a new LobbyMessage from an unparsed Lobby line.
         """
 
-        # print(message)
+        log.debug(message)
 
         if isinstance(message, bytes):
             message = message.decode('UTF-8', 'replace')

@@ -164,6 +164,7 @@ def _connection_registered(message):
     message.client.registration_complete = True
     _queue_ping(message.client)
     for channel in message.client.channels_to_join:
+        log.debug(channel)
         message.client.join(channel)
 
 
