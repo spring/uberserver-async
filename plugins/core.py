@@ -224,6 +224,10 @@ def _redispatch_clients_from(message):
     print(message)
 
 
+def _redispatch_logininfoend(message):
+    signal("logininfoend").send(message)
+
+
 signal("raw").connect(_redispatch_raw)
 signal("spring").connect(_redispatch_spring)
 
@@ -252,6 +256,7 @@ signal("spring-denied").connect(_connection_denied)
 signal("spring-agreementend").connect(_redispatch_agreement)
 
 signal("spring-motd").connect(_parse_motd)
+signal("spring-logininfoend").connect(_redispatch_logininfoend)
 signal("spring-clients").connect(_redispatch_clients)
 
 signal("spring-bridgedclientfrom").connect(_redispatch_bridged_client)
@@ -259,5 +264,6 @@ signal("spring-unbridgedclientfrom").connect(_redispatch_un_bridged_client)
 
 signal("spring-joinedfrom").connect(_redispatch_joined_from)
 signal("spring-leftfrom").connect(_redispatch_left_from)
+
 signal("spring-saidfrom").connect(_redispatch_said_from)
 signal("spring-clientsfrom").connect(_redispatch_clients_from)

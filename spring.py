@@ -85,7 +85,7 @@ class LobbyProtocol(asyncio.Protocol):
     Represents a connection to SpringRTS Lobby.
     """
 
-    def __init__(self, name):
+    def __init__(self, name="AsyncSpring 0.1"):
         self.name = name
 
     def connection_made(self, transport):
@@ -218,7 +218,7 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-        self.writeln("LOGIN {} {} 3200 * AsyncSpring 0.1\t0\tu".format(self.username, EncodePassword(self.password)))
+        self.writeln("LOGIN {} {} 3200 * {}\t0\tu".format(self.username, EncodePassword(self.password), self.name))
         signal("login-complete").send(self)
 
     def bridged_client_from(self, location, external_id, external_username):
