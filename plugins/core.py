@@ -121,9 +121,11 @@ def _nick_in_use(message):
 def _ping_servers():
     for client in ping_clients:
         if client.last_pong != 0 and time.time() - client.last_pong > 90:
+            del ping_clients[:]
             client.connection_lost(Exception())
         client.writeln("PING")
         client.last_ping = time.time()
+
     asyncio.get_event_loop().call_later(29, _ping_servers)
 
 
