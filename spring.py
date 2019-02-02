@@ -318,6 +318,9 @@ class LobbyProtocol(asyncio.Protocol):
             self.writeln("SAYPRIVATEEX {} :{}".format(username, message[:400]))
             message = message[400:]
 
+    def ping(self):
+        self.writeln("PING")
+
     def nick_in_use_handler(self):
         """
         Choose a nickname to use if the requested one is already in use.
