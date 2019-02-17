@@ -197,33 +197,33 @@ def _redispatch_agreement(message):
 
 
 def _redispatch_bridged_client(message):
-    print("BRIDGED CLIENT")
-    print(message)
+    log.debug("BRIDGED CLIENT")
+    log.debug(message)
 
 
 def _redispatch_un_bridged_client(message):
-    print("UNBRIDGETD CLIENT FROM")
-    print(message)
+    log.debug("UNBRIDGETD CLIENT FROM")
+    log.debug(message)
 
 
 def _redispatch_joined_from(message):
-    print("JOINED FROM")
-    print(message)
+    log.debug("JOINED FROM")
+    log.debug(message)
 
 
 def _redispatch_left_from(message):
-    print("LEFT FROM")
-    print(message)
+    log.debug("LEFT FROM")
+    log.debug(message)
 
 
 def _redispatch_said_from(message):
-    print("SAID FROM")
-    print(message)
+    log.debug("SAID FROM")
+    log.debug(message)
 
 
 def _redispatch_clients_from(message):
-    print("CLIENTS FROM")
-    print(message)
+    log.debug("CLIENTS FROM")
+    log.debug(message)
 
 
 def _redispatch_logininfoend(message):
