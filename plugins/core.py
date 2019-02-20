@@ -123,6 +123,7 @@ def _ping_servers():
         if client.last_pong != 0 and time.time() - client.last_pong > 90:
             del ping_clients[:]
             client.connection_lost(Exception())
+            return
         client.writeln("PING")
         client.last_ping = time.time()
 

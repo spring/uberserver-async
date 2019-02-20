@@ -102,7 +102,7 @@ class LobbyProtocol(asyncio.Protocol):
         self.password = ""
         self.server_supports = collections.defaultdict(lambda *_: None)
         self.queue = []
-        self.queue_timer = 1.5
+        self.queue_timer = 0.1
         self.caps = set()
         self.registration_complete = False
         self.channels_to_join = []
@@ -168,6 +168,7 @@ class LobbyProtocol(asyncio.Protocol):
 
         # print(line)
 
+        log.debug(line)
         self.transport.write(line + b"\r\n")
         signal("lobby-send").send(line.decode())
 
@@ -176,7 +177,6 @@ class LobbyProtocol(asyncio.Protocol):
         Queue a message for sending to the currently connected SpringRTS Lobby server.
         """
 
-        log.debug(line)
         self.queue.append(line)
         return self
 
@@ -238,6 +238,7 @@ class LobbyProtocol(asyncio.Protocol):
         Join from remote server.
         """
         self.writeln("JOINFROM {} {} {}".format(channel, location, external_id))
+
 
     def leave_from(self, channel, location, external_id):
         """
