@@ -102,7 +102,7 @@ class LobbyProtocol(asyncio.Protocol):
         self.password = ""
         self.server_supports = collections.defaultdict(lambda *_: None)
         self.queue = []
-        self.queue_timer = 0.1
+        self.queue_timer = 0.25
         self.caps = set()
         self.registration_complete = False
         self.channels_to_join = []
