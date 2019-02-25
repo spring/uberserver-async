@@ -162,6 +162,7 @@ def _queue_ping(client):
 
 
 def _connection_registered(message):
+    signal("accepted").send(message)
 
     message.client.registration_complete = True
     _queue_ping(message.client)
