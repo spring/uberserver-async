@@ -9,7 +9,7 @@ import logging
 log = logging.getLogger(__name__)
 
 ping_client = None
-
+ping_timer = None
 
 def _pong(message):
     pass
@@ -71,14 +71,21 @@ def _redispatch_nick(message):
     signal("nick").send(message, user=old_user, new_nick=new_nick)
 
 
-def _ping_servers():
+def _ping_server():
+    global ping_timer
     if ping_client.last_pong != 0 and time.time() - ping_client.last_pong > 90:
         ping_client.connection_lost(Exception())
-        return
-    ping_client.writeln("PING")
-    ping_client.last_ping = time.time()
 
-    asyncio.get_event_loop().call_later(29, _ping_servers)
+    else:
+        ping_client.writeln("PING")
+        ping_client.last_ping = time.time()
+
+        ping_timer = asyncio.get_event_loop().call_later(29, _ping_server)
+
+
+def _stop_ping(message):
+    if ping_timer:
+        ping_timer.cancel()
 
 
 def _catch_pong(message):
@@ -112,7 +119,7 @@ def _queue_ping(client):
     global ping_client
 
     ping_client = client
-    _ping_servers()
+    _ping_server()
 
 
 def _connection_registered(message):
@@ -170,6 +177,7 @@ signal("raw").connect(_redispatch_raw)
 signal("spring").connect(_redispatch_spring)
 
 signal("connected").connect(_login_client)
+signal("connection-lost").connect(_stop_ping)
 
 signal("spring-pong").connect(_catch_pong)
 
