@@ -85,9 +85,6 @@ class LobbyProtocol(asyncio.Protocol):
     Represents a connection to SpringRTS Lobby.
     """
 
-    def __init__(self, name="AsyncSpring 0.1"):
-        self.name = name
-
     def connection_made(self, transport):
         self.work = True
         self.transport = transport
@@ -107,9 +104,11 @@ class LobbyProtocol(asyncio.Protocol):
         self.registration_complete = False
         self.channels_to_join = []
         self.autoreconnect = True
+        self.name = "AsyncSpring 0.1"
+        self.flags = "l sp cl t u"
 
         signal("connected").send(self)
-        self.logger.info("Connection success.")
+        self.logger.debug("Connection success.")
 
         self.process_queue()
 
@@ -187,13 +186,13 @@ class LobbyProtocol(asyncio.Protocol):
         """
 
         self.username = username
-        self.password = password
+        self.password = EncodePassword(password)
         self.email = email
 
         if self.email:
-            self.writeln("REGISTER {} {} {}".format(self.username, EncodePassword(self.password), self.email))
+            self.writeln("REGISTER {} {} {}".format(self.username, self.password, self.email))
         else:
-            self.writeln("REGISTER {} {}".format(self.username, EncodePassword(self.password)))
+            self.writeln("REGISTER {} {}".format(self.username, self.password))
 
         self.logger.info("Sent registration information")
         signal("registration-complete").send(self)
@@ -204,13 +203,16 @@ class LobbyProtocol(asyncio.Protocol):
 
     # protocol abstractions
 
-    def login(self, username, password):
+    def login(self, username, password, flags=None):
         """
         Queue registration with the server. This includes sending nickname,
         ident, realname, and password (if required by the server).
         """
         self.username = username
-        self.password = password
+        self.password = EncodePassword(password)
+
+        if flags:
+            self.flags = flags
 
         return self
 
@@ -218,7 +220,7 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-        self.writeln("LOGIN {} {} 3200 * {}\t0\tu".format(self.username, EncodePassword(self.password), self.name))
+        self.writeln("LOGIN {} {} 3200 * {}\t0\t{}".format(self.username, self.password, self.name, self.flags))
         signal("login-complete").send(self)
 
     def bridged_client_from(self, location, external_id, external_username):
@@ -238,7 +240,6 @@ class LobbyProtocol(asyncio.Protocol):
         Join from remote server.
         """
         self.writeln("JOINFROM {} {} {}".format(channel, location, external_id))
-
 
     def leave_from(self, channel, location, external_id):
         """
@@ -349,64 +350,72 @@ def get_user(hostmask):
         return User(hostmask, hostmask, hostmask)
     return User.from_hostmask(hostmask)
 
+#
+# async def connect(server, port=8200, use_ssl=False, name=None):
+#     """
+#     Connect to an SpringRTS Lobby server. Returns a proxy to an LobbyProtocol object.
+#     """
+#
+#     transport, protocol = await loop.create_connection(lambda: LobbyProtocol(name),
+#                                                        host=server, port=port, ssl=use_ssl)
+#
+#     protocol.wrapper = LobbyProtocolWrapper(protocol)
+#     protocol.server_info = {"host": server, "port": port, "ssl": use_ssl}
+#     protocol.netid = "{}:{}:{}{}".format(id(protocol), server, port, "+" if use_ssl else "-")
+#
+#     signal("netid-available").send(protocol)
+#
+#     connections[protocol.netid] = protocol.wrapper
+#
+#     return protocol.wrapper
+#
+#
+# def reconnect(client_wrapper):
+#     name = client_wrapper.name
+#     connector = loop.create_connection(lambda: LobbyProtocol(name), **client_wrapper.server_info)
+#     transport, protocol = loop.run_until_complete(connector)
+#     protocol.logger.critical("Reconnecting...")
+#     client_wrapper.protocol = protocol
+#
+#
+# def disconnected(client_wrapper):
+#     """
+#     Either reconnect the LobbyProtocol object, or exit, depending on
+#     configuration. Called by LobbyProtocol when we lose the connection.
+#     """
+#
+#     name = client_wrapper.name
+#
+#     client_wrapper.protocol.work = False
+#     client_wrapper.logger.info("Disconnected from {}. Attempting to reconnect...".format(client_wrapper.netid))
+#     signal("disconnected").send(client_wrapper.protocol)
+#     if not client_wrapper.protocol.autoreconnect:
+#         sys.exit(2)
+#
+#     connector = loop.create_connection(lambda: LobbyProtocol(name),
+#                                        **client_wrapper.server_info)
+#
+#     def reconnected(f):
+#         """
+#         Callback function for reconnection.
+#         """
+#         if f.exception():
+#             time.sleep(5)
+#             signal("connection-lost").send(client_wrapper)
+#         else:
+#             client_wrapper.logger.info("Reconnected! {}".format(client_wrapper.netid))
+#             _, protocol = f.result()
+#             protocol.channels_to_join = client_wrapper.channels_to_join
+#             protocol.login(client_wrapper.username, client_wrapper.password)
+#             protocol.server_info = client_wrapper.server_info
+#             protocol.netid = client_wrapper.netid
+#             protocol.wrapper = client_wrapper
+#             signal("netid-available").send(protocol)
+#             client_wrapper.protocol = protocol
+#
+#     # asyncio.async(connector).add_done_callback(reconnected)
 
-async def connect(server, port=8200, use_ssl=False, name=None):
-    """
-    Connect to an SpringRTS Lobby server. Returns a proxy to an LobbyProtocol object.
-    """
 
-    transport, protocol = await loop.create_connection(lambda: LobbyProtocol(name),
-                                                       host=server, port=port, ssl=use_ssl)
-
-    protocol.wrapper = LobbyProtocolWrapper(protocol)
-    protocol.server_info = {"host": server, "port": port, "ssl": use_ssl}
-    protocol.netid = "{}:{}:{}{}".format(id(protocol), server, port, "+" if use_ssl else "-")
-
-    signal("netid-available").send(protocol)
-
-    connections[protocol.netid] = protocol.wrapper
-
-    return protocol.wrapper
-
-
-def disconnected(client_wrapper):
-    """
-    Either reconnect the LobbyProtocol object, or exit, depending on
-    configuration. Called by LobbyProtocol when we lose the connection.
-    """
-
-    name = client_wrapper.name
-
-    client_wrapper.protocol.work = False
-    client_wrapper.logger.info("Disconnected from {}. Attempting to reconnect...".format(client_wrapper.netid))
-    signal("disconnected").send(client_wrapper.protocol)
-    if not client_wrapper.protocol.autoreconnect:
-        sys.exit(2)
-
-    connector = loop.create_connection(lambda: LobbyProtocol(name),
-                                       **client_wrapper.server_info)
-
-    def reconnected(f):
-        """
-        Callback function for reconnection.
-        """
-        if f.exception():
-            time.sleep(5)
-            signal("connection-lost").send(client_wrapper)
-        else:
-            client_wrapper.logger.info("Reconnected! {}".format(client_wrapper.netid))
-            _, protocol = f.result()
-            protocol.channels_to_join = client_wrapper.channels_to_join
-            protocol.login(client_wrapper.username, client_wrapper.password)
-            protocol.server_info = client_wrapper.server_info
-            protocol.netid = client_wrapper.netid
-            protocol.wrapper = client_wrapper
-            signal("netid-available").send(protocol)
-            client_wrapper.protocol = protocol
-
-    asyncio.async(connector).add_done_callback(reconnected)
-
-
-signal("connection-lost").connect(disconnected)
+# signal("connection-lost").connect(reconnect)
 
 from asyncspring.plugins.core import *

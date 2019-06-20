@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 ping_client = None
 ping_timer = None
 
+
 def _pong(message):
     pass
 
