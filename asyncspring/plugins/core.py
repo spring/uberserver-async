@@ -1,10 +1,10 @@
-from asyncblink import signal
-from asyncspring.spring import get_user
-from asyncspring.parser import LobbyMessage
-
 import asyncio
 import time
 import logging
+
+from asyncblink import signal
+from asyncspring.__main__ import get_user
+from asyncspring.parser import LobbyMessage
 
 log = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ def _connection_registered(message):
     message.client.registration_complete = True
     _queue_ping(message.client)
     for channel in message.client.channels_to_join:
-        log.debug(channel)
+        # log.debug(channel)
         message.client.join(channel)
 
 

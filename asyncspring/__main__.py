@@ -1,0 +1,102 @@
+import asyncio
+import importlib
+import logging
+
+from asyncblink import signal
+
+from asyncspring.lobby_protocol import LobbyProtocolWrapper, LobbyProtocol, connections
+
+loop = asyncio.get_event_loop()
+
+plugins = []
+
+log = logging.getLogger(__name__)
+
+
+def plugin_registered_handler(plugin_name):
+    plugins.append(plugin_name)
+
+
+signal("plugin-registered").connect(plugin_registered_handler)
+
+
+def load_plugins(*plugins):
+    for plugin in plugins:
+        if plugin not in plugins:
+            importlib.import_module(plugin)
+
+
+class User:
+    """
+    Represents a user on SpringRTS Lobby, with their nickname, username, and hostname.
+    """
+
+    def __init__(self, username, password, email):
+        self.username = username
+        self.password = password
+        self.email = email
+        # self.hostmask = "{}!{}@{}".format(nick, user, host)
+        self._register_wait = 0
+
+    @classmethod
+    def from_hostmask(self, hostmask):
+        if "!" in hostmask and "@" in hostmask:
+            nick, userhost = hostmask.split("!", maxsplit=1)
+            user, host = userhost.split("@", maxsplit=1)
+            return self(nick, user, host)
+        return self(None, None, hostmask)
+
+
+def get_user(hostmask):
+    if "!" not in hostmask or "@" not in hostmask:
+        return User(hostmask, hostmask, hostmask)
+    return User.from_hostmask(hostmask)
+
+
+async def connect(server, port=8200, use_ssl=False):
+    """
+    Connect to an SpringRTS Lobby server. Returns a proxy to an LobbyProtocol object.
+    """
+    protocol = None
+    while protocol is None:
+        try:
+            transport, protocol = await loop.create_connection(LobbyProtocol, host=server, port=port, ssl=use_ssl)
+        except ConnectionRefusedError as conn_error:
+            # self.logger.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
+            await asyncio.sleep(10)
+
+    # self.logger.info("connected")
+    protocol.wrapper = LobbyProtocolWrapper(protocol)
+    protocol.server_info = {"host": server, "port": port, "ssl": use_ssl}
+    protocol.netid = "{}:{}:{}{}".format(id(protocol), server, port, "+" if use_ssl else "-")
+
+    signal("netid-available").send(protocol)
+
+    connections[protocol.netid] = protocol.wrapper
+
+    return protocol.wrapper
+
+
+async def reconnect(client_wrapper):
+    protocol = None
+    server_info = client_wrapper.server_info
+
+    # self.logger.info("reconnecting")
+    while protocol is None:
+        await asyncio.sleep(10)
+        try:
+            transport, protocol = await loop.create_connection(LobbyProtocol, **server_info)
+            client_wrapper.protocol = protocol
+
+            signal("netid-available").send(protocol)
+
+            signal("reconnected").send()
+
+        except ConnectionRefusedError as conn_error:
+            pass
+            #self.logger.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
+
+
+signal("connection-lost").connect(reconnect)
+
+from asyncspring.plugins.core import *
