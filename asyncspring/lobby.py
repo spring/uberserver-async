@@ -4,7 +4,7 @@ import logging
 
 from asyncblink import signal
 
-from asyncspring.lobby_protocol import LobbyProtocolWrapper, LobbyProtocol, connections
+from asyncspring.protocol import LobbyProtocolWrapper, LobbyProtocol, connections
 
 loop = asyncio.get_event_loop()
 
@@ -26,33 +26,6 @@ def load_plugins(*plugins):
             importlib.import_module(plugin)
 
 
-class User:
-    """
-    Represents a user on SpringRTS Lobby, with their nickname, username, and hostname.
-    """
-
-    def __init__(self, username, password, email):
-        self.username = username
-        self.password = password
-        self.email = email
-        # self.hostmask = "{}!{}@{}".format(nick, user, host)
-        self._register_wait = 0
-
-    @classmethod
-    def from_hostmask(self, hostmask):
-        if "!" in hostmask and "@" in hostmask:
-            nick, userhost = hostmask.split("!", maxsplit=1)
-            user, host = userhost.split("@", maxsplit=1)
-            return self(nick, user, host)
-        return self(None, None, hostmask)
-
-
-def get_user(hostmask):
-    if "!" not in hostmask or "@" not in hostmask:
-        return User(hostmask, hostmask, hostmask)
-    return User.from_hostmask(hostmask)
-
-
 async def connect(server, port=8200, use_ssl=False):
     """
     Connect to an SpringRTS Lobby server. Returns a proxy to an LobbyProtocol object.
@@ -62,7 +35,7 @@ async def connect(server, port=8200, use_ssl=False):
         try:
             transport, protocol = await loop.create_connection(LobbyProtocol, host=server, port=port, ssl=use_ssl)
         except ConnectionRefusedError as conn_error:
-            # self.logger.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
+            log.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
             await asyncio.sleep(10)
 
     # self.logger.info("connected")
@@ -81,7 +54,7 @@ async def reconnect(client_wrapper):
     protocol = None
     server_info = client_wrapper.server_info
 
-    # self.logger.info("reconnecting")
+    log.info("reconnecting")
     while protocol is None:
         await asyncio.sleep(10)
         try:
@@ -94,9 +67,9 @@ async def reconnect(client_wrapper):
 
         except ConnectionRefusedError as conn_error:
             pass
-            #self.logger.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
+            log.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
 
 
 signal("connection-lost").connect(reconnect)
 
-from asyncspring.plugins.core import *
+import asyncspring.pluginscore

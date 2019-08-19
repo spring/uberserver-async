@@ -1,2 +1,2 @@
-asyncblink
+git+https://github.com/jucacrispim/asyncblink.git
 ruamel.yaml

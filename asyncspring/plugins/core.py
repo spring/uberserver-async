@@ -3,7 +3,7 @@ import time
 import logging
 
 from asyncblink import signal
-from asyncspring.__main__ import get_user
+from asyncspring.user import get_user
 from asyncspring.parser import LobbyMessage
 
 log = logging.getLogger(__name__)
@@ -19,6 +19,7 @@ def _pong(message):
 def _redispatch_message_common(message, mtype):
     user = message.source
     target, text = message.params[0], " ".join(message.params[2:])
+    log.debug(mtype)
     signal(mtype).send(message, user=user, target=target, text=text)
 
 
@@ -204,5 +205,3 @@ signal("spring-clients").connect(_redispatch_clients)
 
 signal("spring-joinedfrom").connect(_redispatch_joined_from)
 signal("spring-leftfrom").connect(_redispatch_left_from)
-
-signal("spring-saidfrom").connect(_redispatch_said_from)
