@@ -88,7 +88,7 @@ class LobbyProtocol(asyncio.Protocol):
             index = self.buf.index("\n")
             line_received = self.buf[:index].strip()
             self.buf = self.buf[index + 1:]
-            self.logger.debug(line_received)
+            self.logger.debug("RECEIVED: {}".format(line_received))
             self.signals["raw"].send(self, text=line_received)
 
     def connection_lost(self, exc):
@@ -137,7 +137,7 @@ class LobbyProtocol(asyncio.Protocol):
 
         # print(line)
 
-        self.logger.debug(line)
+        self.logger.debug("SENT: {}".format(line))
         self.transport.write(line + b"\r\n")
         self.signals["lobby-send"].send(line.decode())
 

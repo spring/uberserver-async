@@ -12,14 +12,10 @@ ping_client = None
 ping_timer = None
 
 
-def _pong(message):
-    pass
-
-
 def _redispatch_message_common(message, mtype):
     user = message.source
     target, text = message.params[0], " ".join(message.params[2:])
-    log.debug(mtype)
+    # log.debug("{} {}".format(mtype, text))
     signal(mtype).send(message, user=user, target=target, text=text)
 
 
@@ -108,7 +104,7 @@ def _redispatch_raw(client, text):
 
 
 def _register_client(client):
-    log.info("Sending real registration message")
+    log.info("Sending registration info")
     asyncio.get_event_loop().call_later(1, client._register)
 
 

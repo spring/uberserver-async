@@ -5,6 +5,7 @@ import logging
 from asyncblink import signal
 
 from asyncspring.protocol import LobbyProtocolWrapper, LobbyProtocol, connections
+from asyncspring.plugins import core
 
 loop = asyncio.get_event_loop()
 
@@ -69,7 +70,3 @@ async def reconnect(client_wrapper):
             pass
             log.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
 
-
-signal("connection-lost").connect(reconnect)
-
-import asyncspring.plugins.core
