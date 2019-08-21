@@ -3,4 +3,5 @@ lobby:
   port: 8200
   user: "username"
   pass: "password"
+  channels: ["#test"]
   ssl: 0

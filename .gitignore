@@ -5,7 +5,6 @@ __pycache__
 /MANIFEST
 *.swp
 /venv
-example.py
 \.idea/
 
 config\.yaml

@@ -1,10 +1,10 @@
-from asyncblink import signal
-from asyncspring.spring import get_user
-from asyncspring.parser import LobbyMessage
-
 import asyncio
 import time
 import logging
+
+from asyncblink import signal
+from asyncspring.user import get_user
+from asyncspring.parser import LobbyMessage
 
 log = logging.getLogger(__name__)
 
@@ -12,13 +12,10 @@ ping_client = None
 ping_timer = None
 
 
-def _pong(message):
-    pass
-
-
 def _redispatch_message_common(message, mtype):
     user = message.source
     target, text = message.params[0], " ".join(message.params[2:])
+    # log.debug("{} {}".format(mtype, text))
     signal(mtype).send(message, user=user, target=target, text=text)
 
 
@@ -107,7 +104,7 @@ def _redispatch_raw(client, text):
 
 
 def _register_client(client):
-    log.info("Sending real registration message")
+    log.info("Sending registration info")
     asyncio.get_event_loop().call_later(1, client._register)
 
 
@@ -129,7 +126,7 @@ def _connection_registered(message):
     message.client.registration_complete = True
     _queue_ping(message.client)
     for channel in message.client.channels_to_join:
-        log.debug(channel)
+        # log.debug(channel)
         message.client.join(channel)
 
 
@@ -204,5 +201,3 @@ signal("spring-clients").connect(_redispatch_clients)
 
 signal("spring-joinedfrom").connect(_redispatch_joined_from)
 signal("spring-leftfrom").connect(_redispatch_left_from)
-
-signal("spring-saidfrom").connect(_redispatch_said_from)
