@@ -72,4 +72,4 @@ async def reconnect(client_wrapper):
 
 signal("connection-lost").connect(reconnect)
 
-import asyncspring.pluginscore
+import asyncspring.plugins.core

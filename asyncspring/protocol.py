@@ -62,7 +62,17 @@ class LobbyProtocol(asyncio.Protocol):
         self.name = "AsyncSpring 0.1"
         self.flags = "l sp cl t u"
 
-        signal("connected").send(self)
+        self.signals = dict()
+
+        self.signals["connected"] = signal("connected")
+        self.signals["raw"] = signal("raw")
+        self.signals["connection-lost"] = signal("connection-lost")
+        self.signals["lobby-send"] = signal("lobby-send")
+        self.signals["registration-complete"] = signal("registration-complete")
+        self.signals["login-complete"] = signal("login-complete")
+
+        self.signals["connected"].send(self)
+
         self.logger.debug("Connection success.")
 
         self.process_queue()
@@ -70,6 +80,7 @@ class LobbyProtocol(asyncio.Protocol):
     def data_received(self, data):
         if not self.work:
             return
+
         data = data.decode()
 
         self.buf += data
@@ -78,13 +89,14 @@ class LobbyProtocol(asyncio.Protocol):
             line_received = self.buf[:index].strip()
             self.buf = self.buf[index + 1:]
             self.logger.debug(line_received)
-            signal("raw").send(self, text=line_received)
+            self.signals["raw"].send(self, text=line_received)
 
     def connection_lost(self, exc):
         if not self.work:
             return
+
         self.logger.critical("Connection lost.")
-        signal("connection-lost").send(self.wrapper)
+        self.signals["connection-lost"].send(self.wrapper)
 
     # Core helper functions
 
@@ -96,6 +108,7 @@ class LobbyProtocol(asyncio.Protocol):
 
         if not self.work:
             return
+
         if self.queue:
             self._writeln(self.queue.pop(0))
 
@@ -108,7 +121,9 @@ class LobbyProtocol(asyncio.Protocol):
             Register an event with Blinker. Convenience function.
             """
             self.logger.info("Registering function {} for event {}".format(f.__name__,  event))
+
             signal(event).connect(f)
+
             return f
 
         return process
@@ -124,7 +139,7 @@ class LobbyProtocol(asyncio.Protocol):
 
         self.logger.debug(line)
         self.transport.write(line + b"\r\n")
-        signal("lobby-send").send(line.decode())
+        self.signals["lobby-send"].send(line.decode())
 
     def writeln(self, line):
         """
@@ -150,7 +165,7 @@ class LobbyProtocol(asyncio.Protocol):
             self.writeln("REGISTER {} {}".format(self.username, self.password))
 
         self.logger.info("Sent registration information")
-        signal("registration-complete").send(self)
+        self.signals["registration-complete"].send(self)
         self.nickname = self.username
 
     def accept(self):
@@ -176,7 +191,7 @@ class LobbyProtocol(asyncio.Protocol):
         Send Login message to SpringLobby Server.
         """
         self.writeln("LOGIN {} {} 3200 * {}\t0\t{}".format(self.username, self.password, self.name, self.flags))
-        signal("login-complete").send(self)
+        self.signals["login-complete"].send(self)
 
     def bridged_client_from(self, location, external_id, external_username):
         """
