@@ -69,4 +69,3 @@ async def reconnect(client_wrapper):
         except ConnectionRefusedError as conn_error:
             pass
             log.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
-

@@ -9,7 +9,7 @@ from asyncspring.lobby import connect, reconnect
 
 logging.basicConfig(level=logging.DEBUG)
 
-logger = logging.getLogger("example")
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
@@ -29,17 +29,18 @@ async def init_bot():
     else:
         ssl_context = False
 
-    lobby = await connect(lobby_host, port=lobby_port, use_ssl=ssl_context)
+    bot = await connect(lobby_host, port=lobby_port, use_ssl=ssl_context)
 
-    lobby.login(lobby_user, lobby_pass)
+    bot.login(lobby_user, lobby_pass)
 
     for channel in lobby_channels:
-        lobby.channels_to_join.append(channel)
+        bot.channels_to_join.append(channel)
 
     logger.debug("Login success")
 
-    @lobby.on("said")
-    def on_said(message, user, target, text):
+    @bot.on("said")
+    def incoming_message(message, user, target, text):
+        bot.say("#test", "TEST MSG")
         logger.info(message)
 
     # connection signals
