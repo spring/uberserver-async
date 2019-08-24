@@ -1,30 +1,13 @@
 import asyncio
-import importlib
 import logging
 
 from asyncblink import signal
 
 from asyncspring.protocol import LobbyProtocolWrapper, LobbyProtocol, connections
-from asyncspring.plugins import core
 
 loop = asyncio.get_event_loop()
 
-plugins = []
-
 log = logging.getLogger(__name__)
-
-
-def plugin_registered_handler(plugin_name):
-    plugins.append(plugin_name)
-
-
-signal("plugin-registered").connect(plugin_registered_handler)
-
-
-def load_plugins(*plugins):
-    for plugin in plugins:
-        if plugin not in plugins:
-            importlib.import_module(plugin)
 
 
 async def connect(server, port=8200, use_ssl=False):
@@ -69,3 +52,7 @@ async def reconnect(client_wrapper):
         except ConnectionRefusedError as conn_error:
             pass
             log.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
+
+signal("connection-lost").connect(reconnect)
+
+import asyncspring.plugins.core

@@ -1,4 +1,5 @@
 import asyncio
+import importlib
 import collections
 import logging
 
@@ -7,6 +8,21 @@ from base64 import b64encode
 from asyncblink import signal
 
 connections = {}
+
+plugins = []
+
+
+def plugin_registered_handler(plugin_name):
+    plugins.append(plugin_name)
+
+
+signal("plugin-registered").connect(plugin_registered_handler)
+
+
+def load_plugins(*plugins):
+    for plugin in plugins:
+        if plugin not in plugins:
+            importlib.import_module(plugin)
 
 
 def encode_password(password):
