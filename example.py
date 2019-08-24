@@ -3,12 +3,9 @@ import logging
 import asyncio
 import ruamel.yaml as yaml
 
-from asyncblink import signal
-
-from asyncspring.lobby import connect, reconnect
+from asyncspring import lobby
 
 logging.basicConfig(level=logging.DEBUG)
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -29,7 +26,7 @@ async def init_bot():
     else:
         ssl_context = False
 
-    bot = await connect(lobby_host, port=lobby_port, use_ssl=ssl_context)
+    bot = await lobby.connect(lobby_host, port=lobby_port, use_ssl=ssl_context)
 
     bot.login(lobby_user, lobby_pass)
 
@@ -39,13 +36,9 @@ async def init_bot():
     logger.debug("Login success")
 
     @bot.on("said")
-    def incoming_message(message, user, target, text):
+    def incoming_said(message, user, target, text):
         bot.say("#test", "TEST MSG")
         logger.info(message)
-
-    # connection signals
-    # signal("reconnected").connect(login)
-    signal("connection-lost").connect(reconnect)
 
     logger.debug("init signals registered")
 
