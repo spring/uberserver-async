@@ -3,6 +3,7 @@ import logging
 import asyncio
 import ruamel.yaml as yaml
 
+from asyncblink import signal
 from asyncspring import lobby
 
 logging.basicConfig(level=logging.DEBUG)
@@ -28,16 +29,15 @@ async def init_bot():
 
     bot = await lobby.connect(lobby_host, port=lobby_port, use_ssl=ssl_context)
 
-    bot.login(lobby_user, lobby_pass)
-
     for channel in lobby_channels:
         bot.channels_to_join.append(channel)
+
+    bot.login(lobby_user, lobby_pass)
 
     logger.debug("Login success")
 
     @bot.on("said")
-    def incoming_said(message, user, target, text):
-        bot.say("#test", "TEST MSG")
+    async def incoming_said(message, user, target, text):
         logger.info(message)
 
     logger.debug("init signals registered")

@@ -5,7 +5,7 @@ import logging
 
 from hashlib import md5
 from base64 import b64encode
-from asyncblink import signal
+from asyncblink import signal, ANY
 
 connections = {}
 
@@ -138,7 +138,7 @@ class LobbyProtocol(asyncio.Protocol):
             """
             self.logger.info("Registering function {} for event {}".format(f.__name__,  event))
 
-            signal(event).connect(f)
+            signal(event).connect(f, sender=ANY, weak=False)
 
             return f
 

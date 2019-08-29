@@ -16,6 +16,7 @@ def _redispatch_message_common(message, mtype):
     user = message.source
     target, text = message.params[0], " ".join(message.params[2:])
     # log.debug("{} {}".format(mtype, text))
+
     signal(mtype).send(message, user=user, target=target, text=text)
 
 
