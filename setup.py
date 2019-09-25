@@ -19,7 +19,7 @@ setuptools.setup(
 
     classifiers=[
         "Development Status :: 1 - Beta",
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'License :: MIT License (MIT)',
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
