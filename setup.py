@@ -15,6 +15,7 @@ setuptools.setup(
 
     install_requires=[
         "asyncblink",
+        "ruamel.yaml"
     ],
 
     classifiers=[
