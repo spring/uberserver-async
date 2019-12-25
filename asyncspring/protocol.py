@@ -1,3 +1,4 @@
+import re
 import asyncio
 import importlib
 import collections
@@ -213,7 +214,10 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Initialized the bridge
         """
-        self.writeln("BRIDGECLIENTFROM {} {} {}".format(location, external_id, external_username.encode("utf-8")))
+
+        name = re.sub('[^A-Za-z0-9]+', '', external_username)
+
+        self.writeln("BRIDGECLIENTFROM {} {} {}".format(location, external_id, name))
 
     def un_bridged_client_from(self, location, external_id):
         """
