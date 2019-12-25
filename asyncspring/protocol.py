@@ -213,7 +213,7 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Initialized the bridge
         """
-        self.writeln("BRIDGECLIENTFROM {} {} {}".format(location, external_id, external_username))
+        self.writeln("BRIDGECLIENTFROM {} {} {}".format(location, external_id, external_username.encode("utf-8")))
 
     def un_bridged_client_from(self, location, external_id):
         """
