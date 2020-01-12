@@ -77,7 +77,7 @@ class LobbyProtocol(asyncio.Protocol):
         self.channels_to_join = []
         self.autoreconnect = True
         self.name = "AsyncSpring 0.1"
-        self.flags = "l sp cl t u"
+        self.flags = "b sp u"
 
         self.signals = dict()
 
