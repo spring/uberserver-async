@@ -80,14 +80,14 @@ class LobbyMessage:
         verb = s[0].upper()
         params = s[1:]
 
-        for param in params:
-            if param.startswith(':'):
-                idx = params.index(param)
-                arg = ' '.join(params[idx:])
-                arg = arg[1:]
-                params = params[:idx]
-                params.append(arg)
-                break
+        # for param in params:
+        #     if param.startswith(':'):
+        #         idx = params.index(param)
+        #         arg = ' '.join(params[idx:])
+        #         arg = arg[1:]
+        #         params = params[:idx]
+        #         params.append(arg)
+        #         break
 
         return cls.from_data(verb, params, source, tags)
 
