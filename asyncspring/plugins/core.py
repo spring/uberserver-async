@@ -46,6 +46,11 @@ def _redispatch_joined(message):
     signal("joined").send(message, user=user, channel=channel)
 
 
+def _redispatch_joinfailed(message):
+    log.debug("JOINFAILED")
+    log.debug(message)
+
+
 def _redispatch_left(message):
     user = get_user(message.params[1])
     channel = message.params[0]
@@ -172,6 +177,11 @@ def _redispatch_said_from(message):
     log.debug(message)
 
 
+def _redispatch_failed(message):
+    log.debug("FAILED")
+    log.debug(message)
+
+
 signal("raw").connect(_redispatch_raw)
 signal("spring").connect(_redispatch_spring)
 
@@ -187,6 +197,8 @@ signal("spring-saidprivateex").connect(_redispatch_saidprivateex)
 
 signal("spring-notice").connect(_redispatch_notice)
 signal("spring-joined").connect(_redispatch_joined)
+signal("spring-joinfailed").connect(_redispatch_joinfailed)
+
 signal("spring-left").connect(_redispatch_left)
 signal("spring-adduser").connect(_redispatch_adduser)
 signal("spring-removeuser").connect(_redispatch_removeuser)
@@ -202,3 +214,5 @@ signal("spring-clients").connect(_redispatch_clients)
 
 signal("spring-joinedfrom").connect(_redispatch_joined_from)
 signal("spring-leftfrom").connect(_redispatch_left_from)
+
+signal("spring-failed").connect(_redispatch_failed)
