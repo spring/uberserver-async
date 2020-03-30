@@ -178,8 +178,7 @@ def _redispatch_said_from(message):
 
 
 def _redispatch_failed(message):
-    log.debug("FAILED")
-    log.debug(message)
+    signal("failed").send(message)
 
 
 signal("raw").connect(_redispatch_raw)
