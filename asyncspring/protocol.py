@@ -67,11 +67,11 @@ class LobbyProtocol(asyncio.Protocol):
         self.lag = 0
         self.buf = ""
         self.old_nickname = None
-        self.username = ""
-        self.password = ""
+        self.bot_username = ""
+        self.bot_password = ""
         self.server_supports = collections.defaultdict(lambda *_: None)
         self.queue = []
-        self.queue_timer = 0.05
+        self.queue_timer = 0.5
         self.caps = set()
         self.registration_complete = False
         self.channels_to_join = []
@@ -172,18 +172,18 @@ class LobbyProtocol(asyncio.Protocol):
         ident, realname, and password (if required by the server).
         """
 
-        self.username = username
-        self.password = encode_password(password)
+        self.bot_username = username
+        self.bot_password = encode_password(password)
         self.email = email
 
         if self.email:
-            self.writeln("REGISTER {} {} {}".format(self.username, self.password, self.email))
+            self.writeln("REGISTER {} {} {}".format(self.bot_username, self.bot_password, self.email))
         else:
-            self.writeln("REGISTER {} {}".format(self.username, self.password))
+            self.writeln("REGISTER {} {}".format(self.bot_username, self.bot_password))
 
         self.logger.info("Sent registration information")
         self.signals["registration-complete"].send(self)
-        self.nickname = self.username
+        self.nickname = self.bot_username
 
     def accept(self):
         self.writeln("CONFIRMAGREEMENT")
@@ -195,8 +195,8 @@ class LobbyProtocol(asyncio.Protocol):
         Queue registration with the server. This includes sending nickname,
         ident, realname, and password (if required by the server).
         """
-        self.username = username
-        self.password = encode_password(password)
+        self.bot_username = username
+        self.bot_password = encode_password(password)
 
         if flags:
             self.flags = flags
@@ -207,7 +207,7 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-        self.writeln("LOGIN {} {} 3200 * {}\t0\t{}".format(self.username, self.password, self.name, self.flags))
+        self.writeln("LOGIN {} {} 3200 * {}\t0\t{}".format(self.bot_username, self.bot_password, self.name, self.flags))
         self.signals["login-complete"].send(self)
 
     def bridged_client_from(self, location, external_id, external_username):
