@@ -71,7 +71,7 @@ class LobbyProtocol(asyncio.Protocol):
         self.bot_password = ""
         self.server_supports = collections.defaultdict(lambda *_: None)
         self.queue = []
-        self.queue_timer = 0.5
+        self.queue_timer = 1.0  # seconds
         self.caps = set()
         self.registration_complete = False
         self.channels_to_join = []
@@ -127,7 +127,10 @@ class LobbyProtocol(asyncio.Protocol):
             return
 
         if self.queue:
-            self._writeln(self.queue.pop(0))
+            # self._writeln(self.queue.pop(0))
+            messages = '\n'.join(self.queue)
+            self._write(messages)
+            self.queue.clear()
 
         self.loop.call_later(self.queue_timer, self.process_queue)
 
@@ -145,7 +148,7 @@ class LobbyProtocol(asyncio.Protocol):
 
         return process
 
-    def _writeln(self, line):
+    def _write(self, line):
         """
         Send a raw message to SpringRTS Lobby immediately.
         """
@@ -155,8 +158,21 @@ class LobbyProtocol(asyncio.Protocol):
         # print(line)
 
         self.logger.debug("SENT: {}".format(line))
-        self.transport.write(line + b"\r\n")
-        self.signals["lobby-send"].send(line.decode())
+        self.transport.write(line.encode(encoding="utf-8"))
+        self.signals["lobby-send"].send(line.encode(encoding="utf-8"))
+
+    def _writeln(self, line):
+        """
+        Send a raw message with new line to SpringRTS Lobby immediately.
+        """
+        if not isinstance(line, bytes):
+            line = line.encode("utf-8")
+
+        # print(line)
+
+        self.logger.debug("SENT: {}".format(line))
+        self.transport.write("{}\r\n".format(line).encode(encoding="utf-8"))
+        self.signals["lobby-send"].send(line.encode(encoding="utf-8"))
 
     def writeln(self, line):
         """
