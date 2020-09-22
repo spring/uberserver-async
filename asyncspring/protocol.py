@@ -77,7 +77,7 @@ class LobbyProtocol(asyncio.Protocol):
         self.channels_to_join = []
         self.autoreconnect = True
         self.name = "AsyncSpring 0.1"
-        self.flags = "b sp u"
+        self.flags = "sp u"
 
         self.signals = dict()
 
@@ -128,7 +128,7 @@ class LobbyProtocol(asyncio.Protocol):
 
         if len(self.queue) > 0:
             # self._writeln(self.queue.pop(0))
-            messages = '\r\n'.join(self.queue)
+            messages = "\r\n".join(self.queue)
             self._write(messages)
             self.queue.clear()
 
