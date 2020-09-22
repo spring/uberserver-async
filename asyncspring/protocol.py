@@ -3,6 +3,7 @@ import asyncio
 import importlib
 import collections
 import logging
+from copy import copy
 
 from hashlib import md5
 from base64 import b64encode
@@ -128,7 +129,7 @@ class LobbyProtocol(asyncio.Protocol):
 
         if len(self.queue) > 0:
             # self._writeln(self.queue.pop(0))
-            messages = "\r\n".join(self.queue)
+            messages = copy("\r\n".join(self.queue))
             self._write(f"{messages}\r\n")
             self.queue.clear()
 
