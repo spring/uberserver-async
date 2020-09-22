@@ -130,8 +130,8 @@ class LobbyProtocol(asyncio.Protocol):
         if len(self.queue) > 0:
             # self._writeln(self.queue.pop(0))
             messages = copy("\r\n".join(self.queue))
-            print(f"{messages}\r\n")
-            self._write(f"{messages}\r\n")
+            print(messages)
+            self._write(f"{messages}")
             self.queue.clear()
 
         self.loop.call_later(self.queue_timer, self.process_queue)
@@ -159,7 +159,7 @@ class LobbyProtocol(asyncio.Protocol):
 
         # print(line)
 
-        self.logger.debug("SENT: {}".format(line.encode(encoding="utf-8")))
+        self.logger.debug("SENT: {}".format(line))
         self.transport.write(line.encode(encoding="utf-8"))
         self.signals["lobby-send"].send(line.encode(encoding="utf-8"))
 
@@ -172,9 +172,9 @@ class LobbyProtocol(asyncio.Protocol):
 
         # print(line)
 
-        self.logger.debug("SENT: {}".format(line.encode(encoding="utf-8")))
-        self.transport.write("{}\r\n".format(line).encode(encoding="utf-8"))
-        self.signals["lobby-send"].send(line.encode(encoding="utf-8"))
+        self.logger.debug("SENT: {}".format(line))
+        self.transport.write(line)
+        self.signals["lobby-send"].send(line)
 
     def writeln(self, line):
         """
