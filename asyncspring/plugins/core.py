@@ -103,6 +103,7 @@ def _redispatch_spring(message):
 
 
 def _redispatch_raw(client, text):
+    log.debug(f"RAW : {client} {text}")
     message = LobbyMessage.from_message(text)
     message.client = client
     # log.debug(message)
