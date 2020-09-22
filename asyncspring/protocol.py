@@ -157,7 +157,7 @@ class LobbyProtocol(asyncio.Protocol):
 
         # print(line)
 
-        self.logger.debug("SENT: {}".format(line))
+        self.logger.debug("SENT: {}".format(line.encode(encoding="utf-8")))
         self.transport.write(line.encode(encoding="utf-8"))
         self.signals["lobby-send"].send(line.encode(encoding="utf-8"))
 
@@ -170,7 +170,7 @@ class LobbyProtocol(asyncio.Protocol):
 
         # print(line)
 
-        self.logger.debug("SENT: {}".format(line))
+        self.logger.debug("SENT: {}".format(line.encode(encoding="utf-8")))
         self.transport.write("{}\r\n".format(line).encode(encoding="utf-8"))
         self.signals["lobby-send"].send(line.encode(encoding="utf-8"))
 
