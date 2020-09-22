@@ -127,6 +127,7 @@ def _queue_ping(client):
 
 
 def _connection_registered(message):
+    log.debug("Connection registered!")
     signal("accepted").send(message)
 
     message.client.registration_complete = True
@@ -164,6 +165,10 @@ def _redispatch_removeuser(message):
 
 
 def _redispatch_agreement(message):
+    signal("agreement").send(message)
+
+
+def _redispatch_agreementend(message):
     signal("agreement_end").send(message)
 
 
@@ -213,7 +218,8 @@ signal("spring-kick").connect(_redispatch_kick)
 signal("spring-nick").connect(_redispatch_nick)
 signal("spring-accepted").connect(_connection_registered)
 signal("spring-denied").connect(_connection_denied)
-signal("spring-agreementend").connect(_redispatch_agreement)
+signal("spring-agreement").connect(_redispatch_agreement)
+signal("spring-agreementend").connect(_redispatch_agreementend)
 
 signal("spring-motd").connect(_parse_motd)
 signal("spring-clients").connect(_redispatch_clients)
