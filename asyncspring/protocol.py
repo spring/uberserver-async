@@ -126,7 +126,7 @@ class LobbyProtocol(asyncio.Protocol):
         if not self.work:
             return
 
-        if self.queue:
+        if len(self.queue) > 0:
             # self._writeln(self.queue.pop(0))
             messages = '\r\n'.join(self.queue)
             self._write(messages)
