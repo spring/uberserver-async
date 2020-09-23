@@ -144,12 +144,10 @@ def _connection_denied(message):
 
 
 def _parse_motd(message):
-    pass
-    # log.info(message)
+    log.info(message)
 
 
 def _redispatch_tasserver(message):
-
     signal("tasserver").send(message)
 
 
@@ -189,6 +187,7 @@ def _redispatch_said_from(message):
 
 
 def _redispatch_failed(message):
+    log.debug(f"FAILED MESSAGE: {message}")
     signal("failed").send(message)
 
 
