@@ -224,7 +224,7 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-        self.writeln("LOGIN {} {} 3200 * {}\t0\t{}".format(self.bot_username, self.bot_password, self.name, self.flags))
+        self.writeln("LOGIN {} {} 3200 * {} 0   {}".format(self.bot_username, self.bot_password, self.name, self.flags))
         self.signals["login-complete"].send(self)
 
     def bridged_client_from(self, location, external_id, external_username):
