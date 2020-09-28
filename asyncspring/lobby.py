@@ -24,6 +24,8 @@ async def connect(server, port=8200, use_ssl=False):
         except ConnectionRefusedError as conn_error:
             log.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
             await asyncio.sleep(10)
+        except Exception as e:
+            log.debug(e)
 
     # self.logger.info("connected")
     protocol.wrapper = LobbyProtocolWrapper(protocol)
