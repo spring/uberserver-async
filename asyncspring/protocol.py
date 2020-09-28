@@ -248,7 +248,7 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-        self.writeln("LOGIN {} {} 3200 * {} 0   {}".format(self.bot_username,
+        self.writeln("LOGIN {0} {1} 3200 * {2}  0   {3}".format(self.bot_username,
                                                            self.bot_password,
                                                            self.client_name,
                                                            self.client_flags))
