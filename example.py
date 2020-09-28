@@ -23,6 +23,7 @@ async def init_bot():
     lobby_user = cfg["lobby"]["user"]
     lobby_pass = cfg["lobby"]["pass"]
     lobby_channels = cfg["lobby"]["channels"]
+    lobby_flags = cfg["lobby"]["flags"]
     enable_ssl = cfg["lobby"]["ssl"]
 
     if enable_ssl:
@@ -30,7 +31,7 @@ async def init_bot():
     else:
         ssl_context = False
 
-    bot = await lobby.connect(lobby_host, port=lobby_port, use_ssl=ssl_context)
+    bot = await lobby.connect(lobby_host, port=lobby_port, flags=lobby_flags, use_ssl=ssl_context)
 
     for channel in lobby_channels:
         bot.channels_to_join.append(channel)
