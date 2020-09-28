@@ -137,7 +137,7 @@ class LobbyProtocol(asyncio.Protocol):
             # self._writeln(self.queue.pop(0))
             messages = copy("\r\n".join(self.queue))
             self.logger.debug(messages)
-            self._write(messages)
+            self._write(f"{messages}\r\n")
             self.queue.clear()
 
         self.loop.call_later(self.queue_timer, self.process_queue)
