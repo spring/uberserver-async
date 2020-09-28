@@ -119,8 +119,7 @@ def _register_client(client):
 
 
 def _login_client(client):
-    log.info("Server login")
-    asyncio.get_event_loop().call_later(1, client._login)
+    log.info("Connected to server")
 
 
 def _queue_ping(client):
@@ -151,6 +150,7 @@ def _parse_motd(message):
 
 
 def _redispatch_tasserver(message):
+    asyncio.get_event_loop().call_later(1, message._login)
     signal("tasserver").send(message)
 
 
