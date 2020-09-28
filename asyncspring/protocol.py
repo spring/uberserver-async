@@ -153,8 +153,6 @@ class LobbyProtocol(asyncio.Protocol):
             self.logger.debug(f"handle {len(self.queue)} messages")
             # self._writeln(self.queue.pop(0))
             messages = copy("\r\n".join(self.queue))
-            self.logger.debug(messages.encode("utf-8"))
-            self.logger.debug(messages)
             self._write(f"{messages}\r\n")
             self.queue.clear()
 
@@ -179,7 +177,7 @@ class LobbyProtocol(asyncio.Protocol):
         Send a raw message to SpringRTS Lobby immediately.
         """
 
-        if isinstance(line, str):
+        if not isinstance(line, bytes):
             line = line.encode("utf-8")
 
         self.logger.debug(f"SENT: {line}")
@@ -248,7 +246,7 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-        self.writeln("LOGIN {0} {1} 3200 * {2}  0   {3}".format(self.bot_username,
+        self.writeln("LOGIN {0} {1} 3200 * {2}\t0\t{3}".format(self.bot_username,
                                                            self.bot_password,
                                                            self.client_name,
                                                            self.client_flags))
