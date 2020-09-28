@@ -66,12 +66,31 @@ class LobbyProtocol(asyncio.Protocol):
         self.client_name = client_name
         self.client_flags = client_flags
 
+        self.loop = None
+        self.work = False
+        self.transport = None
+        self.wrapper = None
+        self.logger = logging.getLogger(__name__)
+        self.last_ping = float('inf')
+        self.last_pong = 0
+        self.lag = 0
+        self.buf = ""
+        self.old_nickname = None
+        self.server_supports = collections.defaultdict(lambda *_: None)
+        self.queue = list()
+        self.queue_timer = 1.0  # seconds
+        self.caps = set()
+        self.registration_complete = False
+        self.channels_to_join = list()
+        self.autoreconnect = True
+        self.signals = None
+
+
     def connection_made(self, transport):
         self.loop = asyncio.get_event_loop()
         self.work = True
         self.transport = transport
         self.wrapper = None
-        self.logger = logging.getLogger(__name__)
         self.last_ping = float('inf')
         self.last_pong = 0
         self.lag = 0
@@ -82,8 +101,6 @@ class LobbyProtocol(asyncio.Protocol):
         self.queue_timer = 1.0  # seconds
         self.caps = set()
         self.registration_complete = False
-        self.channels_to_join = []
-        self.autoreconnect = True
 
         self.signals = dict()
 
@@ -136,6 +153,7 @@ class LobbyProtocol(asyncio.Protocol):
             self.logger.debug(f"handle {len(self.queue)} messages")
             # self._writeln(self.queue.pop(0))
             messages = copy("\r\n".join(self.queue))
+            self.logger.debug(messages.encode("utf-8"))
             self.logger.debug(messages)
             self._write(f"{messages}\r\n")
             self.queue.clear()
