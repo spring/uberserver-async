@@ -13,7 +13,7 @@ loop = asyncio.get_event_loop()
 log = logging.getLogger(__name__)
 
 
-async def connect(server, port=8200, flags=None, use_ssl=False):
+async def connect(server, port=8200, use_ssl=False):
     """
     Connect to an SpringRTS Lobby server. Returns a proxy to an LobbyProtocol object.
     """
