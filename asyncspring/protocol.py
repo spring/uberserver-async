@@ -10,7 +10,6 @@ from copy import copy
 
 from hashlib import md5
 from base64 import b64encode
-from pprint import pprint
 
 from asyncblink import signal, ANY
 
@@ -61,6 +60,11 @@ class LobbyProtocol(asyncio.Protocol):
     """
     Represents a connection to SpringRTS Lobby.
     """
+    def __init__(self, bot_username, bot_password, client_name, client_flags):
+        self.bot_username = bot_username
+        self.bot_password = bot_password
+        self.client_name = client_name
+        self.client_flags = client_flags
 
     def connection_made(self, transport):
         self.loop = asyncio.get_event_loop()
@@ -73,8 +77,6 @@ class LobbyProtocol(asyncio.Protocol):
         self.lag = 0
         self.buf = ""
         self.old_nickname = None
-        self.bot_username = ""
-        self.bot_password = ""
         self.server_supports = collections.defaultdict(lambda *_: None)
         self.queue = []
         self.queue_timer = 1.0  # seconds
@@ -82,8 +84,6 @@ class LobbyProtocol(asyncio.Protocol):
         self.registration_complete = False
         self.channels_to_join = []
         self.autoreconnect = True
-        self.name = "AsyncSpring 0.1"
-        self.flags = "sp u"
 
         self.signals = dict()
 
@@ -230,7 +230,10 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send Login message to SpringLobby Server.
         """
-        self.writeln("LOGIN {} {} 3200 * {} 0   {}".format(self.bot_username, self.bot_password, self.name, self.flags))
+        self.writeln("LOGIN {} {} 3200 * {} 0   {}".format(self.bot_username,
+                                                           self.bot_password,
+                                                           self.client_name,
+                                                           self.client_flags))
         self.signals["login-complete"].send(self)
         self.logger.debug("Login Complete")
 
