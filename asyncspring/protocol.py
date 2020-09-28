@@ -62,7 +62,7 @@ class LobbyProtocol(asyncio.Protocol):
     """
     def __init__(self, bot_username, bot_password, client_name, client_flags):
         self.bot_username = bot_username
-        self.bot_password = bot_password
+        self.bot_password = encode_password(bot_password)
         self.client_name = client_name
         self.client_flags = client_flags
 
