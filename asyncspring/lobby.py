@@ -20,7 +20,7 @@ async def connect(server, port=8200, flags=None, use_ssl=False):
     protocol = None
     while protocol is None:
         try:
-            transport, protocol = await loop.create_connection(LobbyProtocol, host=server, port=port, flags=flags, ssl=use_ssl)
+            transport, protocol = await loop.create_connection(LobbyProtocol, host=server, port=port, ssl=use_ssl)
         except ConnectionRefusedError as conn_error:
             log.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
             await asyncio.sleep(10)

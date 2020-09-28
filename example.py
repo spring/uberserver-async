@@ -36,7 +36,7 @@ async def init_bot():
     for channel in lobby_channels:
         bot.channels_to_join.append(channel)
 
-    bot.login(lobby_user, lobby_pass)
+    bot.login(lobby_user, lobby_pass, lobby_flags)
 
     logger.debug("Login success")
 
