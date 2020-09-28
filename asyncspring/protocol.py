@@ -7,6 +7,8 @@ from copy import copy
 
 from hashlib import md5
 from base64 import b64encode
+from pprint import pprint
+
 from asyncblink import signal, ANY
 
 connections = {}
@@ -156,7 +158,7 @@ class LobbyProtocol(asyncio.Protocol):
         if not isinstance(line, bytes):
             line = line.encode("utf-8")
 
-        # print(line)
+        pprint(line)
 
         self.logger.debug(f"SENT: {line}")
         self.transport.write(f"{line}")
