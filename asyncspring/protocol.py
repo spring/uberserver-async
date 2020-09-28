@@ -226,6 +226,7 @@ class LobbyProtocol(asyncio.Protocol):
         """
         self.writeln("LOGIN {} {} 3200 * {} 0   {}".format(self.bot_username, self.bot_password, self.name, self.flags))
         self.signals["login-complete"].send(self)
+        self.logger.debug("Login Complete")
 
     def bridged_client_from(self, location, external_id, external_username):
         """
