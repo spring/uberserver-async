@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# coding=utf-8
+
 """
 parser.py
 Purpose: Conversion of RFC1459 messages to/from native objects.
