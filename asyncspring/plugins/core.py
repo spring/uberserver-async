@@ -197,7 +197,7 @@ signal("spring").connect(_redispatch_spring)
 signal("connected").connect(_login_client)
 signal("connection-lost").connect(_stop_ping)
 
-signal("spring-tasserver").connect(_login_client)
+signal("spring-tasserver").connect(_redispatch_tasserver)
 
 signal("spring-pong").connect(_catch_pong)
 
