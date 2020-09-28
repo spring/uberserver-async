@@ -150,7 +150,6 @@ def _parse_motd(message):
 
 
 def _redispatch_tasserver(message):
-    asyncio.get_event_loop().call_later(1, message._login)
     signal("tasserver").send(message)
 
 
