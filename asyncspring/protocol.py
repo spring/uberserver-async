@@ -155,14 +155,12 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Send a raw message to SpringRTS Lobby immediately.
         """
-        if not isinstance(line, bytes):
-            line = line.encode("utf-8")
 
-        pprint(line)
+        msg = line.decode("utf-8")
 
-        self.logger.debug(f"SENT: {line}")
-        self.transport.write(f"{line}")
-        self.signals["lobby-send"].send(line.encode(encoding="utf-8"))
+        self.logger.debug(f"SENT: {msg}")
+        self.transport.write(msg)
+        self.signals["lobby-send"].send(msg)
 
     def _writeln(self, line):
         """
