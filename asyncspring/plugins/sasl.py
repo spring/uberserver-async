@@ -6,7 +6,8 @@ import asyncspring.plugins.cap
 authentication_info = {}
 
 
-class AuthenticationFailed(Exception): pass
+class AuthenticationFailed(Exception):
+    pass
 
 
 def auth(client, username, password):

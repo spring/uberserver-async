@@ -60,6 +60,7 @@ class LobbyProtocol(asyncio.Protocol):
     """
     Represents a connection to SpringRTS Lobby.
     """
+
     def __init__(self, bot_username, bot_password, client_name, client_flags):
         self.bot_username = bot_username
         self.bot_password = encode_password(bot_password)
@@ -84,7 +85,6 @@ class LobbyProtocol(asyncio.Protocol):
         self.channels_to_join = list()
         self.autoreconnect = True
         self.signals = None
-
 
     def connection_made(self, transport):
         self.loop = asyncio.get_event_loop()
@@ -164,7 +164,7 @@ class LobbyProtocol(asyncio.Protocol):
             """
             Register an event with Blinker. Convenience function.
             """
-            self.logger.info("Registering function {} for event {}".format(f.__name__,  event))
+            self.logger.info("Registering function {} for event {}".format(f.__name__, event))
 
             signal(event).connect(f, sender=ANY, weak=False)
 
@@ -247,9 +247,9 @@ class LobbyProtocol(asyncio.Protocol):
         Send Login message to SpringLobby Server.
         """
         self.writeln("LOGIN {0} {1} 3200 * {2}\t0\t{3}".format(self.bot_username,
-                                                           self.bot_password,
-                                                           self.client_name,
-                                                           self.client_flags))
+                                                               self.bot_password,
+                                                               self.client_name,
+                                                               self.client_flags))
         self.signals["login-complete"].send(self)
         self.logger.debug("Login Complete")
 

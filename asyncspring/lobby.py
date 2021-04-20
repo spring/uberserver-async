@@ -58,6 +58,7 @@ async def reconnect(client_wrapper):
             pass
             log.info("HOST DOWN! retry in 10 secs {}".format(conn_error))
 
+
 signal("connection-lost").connect(reconnect)
 
 import asyncspring.plugins.core
