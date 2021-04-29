@@ -257,8 +257,8 @@ class LobbyProtocol(asyncio.Protocol):
         """
         Initialized the bridge
         """
-
-        name = re.sub('[^A-Za-z0-9]+', '', external_username)
+        
+        name = re.sub('[^A-Za-z0-9]+', '', str(external_username))
 
         self.writeln("BRIDGECLIENTFROM {} {} {}".format(location, external_id, name))
 
